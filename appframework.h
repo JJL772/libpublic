@@ -2,13 +2,13 @@
 #pragma once
 
 #include "containers/list.h"
-#include "../common/common.h"
 
 /* Make sure these dumbos are not here */
 #undef min
 #undef max 
 #include <initializer_list>
 #include <functional>
+#include "public.h"
 
 /**
  * AppFramework and how it works

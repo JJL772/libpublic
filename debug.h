@@ -7,7 +7,7 @@
 
 #include "build.h"
 #include "containers/array.h"
-#include "../common/common.h"
+#include "public.h"
 
 #define BEGIN_DBG_NAMESPACE namespace dbg {
 #define END_DBG_NAMESPACE }

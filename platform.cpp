@@ -2,14 +2,13 @@
  * platform.cpp - Platform specific code
  */ 
 #include "platformspec.h"
-#include "common/port.h"
 #include "containers/list.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "common.h"
+#include "public.h"
 #include "crtlib.h"
 #ifndef _WIN32 
 #include <unistd.h>

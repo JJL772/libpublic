@@ -15,7 +15,7 @@
 
 #include <atomic>
 
-#include "common.h"
+#include "public.h"
 #include "debug.h"
 
 #if defined(_M_X86) || defined(__i386__)

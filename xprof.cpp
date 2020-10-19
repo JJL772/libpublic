@@ -1,6 +1,5 @@
 #include "xprof.h"
-#include "port.h"
-#include "xash3d_types.h"
+#include "public.h"
 #include "crtlib.h"
 #undef min
 #undef max

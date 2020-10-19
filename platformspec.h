@@ -7,7 +7,7 @@
 
 #undef GetCurrentTime
 
-#include "../common/common.h"
+#include "public.h"
 
 namespace platform
 {

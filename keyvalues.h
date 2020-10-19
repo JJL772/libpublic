@@ -16,7 +16,7 @@
 #include <vector>
 #include <stdio.h>
 
-#include "../common/common.h"
+#include "public.h"
 
 class EXPORT KeyValues
 {

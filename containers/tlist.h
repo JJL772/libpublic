@@ -5,8 +5,8 @@
  */
 #pragma once
 
-#include "public/containers/allocator.h"
-#include "threadtools.h"
+#include "allocator.h" 
+#include "../threadtools.h"
 
 /* Standard includes */
 #undef min

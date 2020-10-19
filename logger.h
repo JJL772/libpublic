@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "common.h"
+#include "public.h"
 
 #define COLOR_NORMAL "^1"
 #define COLOR_RED "^2"

@@ -5,7 +5,6 @@
 
 #include <list>
 
-#include "common.h"
 #include "crtlib.h"
 
 struct appsys_t

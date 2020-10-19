@@ -1,4 +1,4 @@
-#include "common.h"
+#include "public.h"
 #include "crtlib.h"
 #include "cmdline.h"
 

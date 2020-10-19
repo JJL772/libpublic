@@ -1,6 +1,6 @@
 #pragma once
 
-#include "public/containers/allocator.h"
+#include "allocator.h"
 
 /* Standard includes */
 #undef min

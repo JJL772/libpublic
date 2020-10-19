@@ -38,7 +38,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "common.h"
+#include "public.h"
 
 /* Different from the other classes as we're trying to replace the engine's zone allocator */
 class EXPORT CZoneAllocator

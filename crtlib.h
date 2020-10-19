@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #endif
 
 #include <stdarg.h>
+#include <stdio.h>
 #include "build.h"
 #include "containers/string.h"
 

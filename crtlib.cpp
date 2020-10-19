@@ -12,9 +12,11 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+#ifndef PUBLIC_STANDALONE 
 #include "port.h"
-#include "xash3d_types.h"
 #include "const.h"
+#endif
+#include "public.h"
 #include <math.h>
 #include <stdarg.h>
 #include <ctype.h>
@@ -24,6 +26,13 @@ GNU General Public License for more details.
 #include "stdio.h"
 #include "crtlib.h"
 #include "mem.h"
+
+#ifdef _POSIX
+#include <unistd.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <stddef.h>
+#endif 
 
 #ifdef _WIN32
 #include <windows.h>

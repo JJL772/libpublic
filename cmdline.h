@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "../common/common.h"
+#include "public.h"
 
 class EXPORT CCommandLine
 {

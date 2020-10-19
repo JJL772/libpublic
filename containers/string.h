@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "common.h"
+#include "../public.h"
 
 class EXPORT String;
 class EXPORT StringView;

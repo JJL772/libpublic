@@ -1,7 +1,7 @@
+#include "public.h"
 #include "build.h"
 #include "debug.h"
 #include "threadtools.h"
-#include "common.h"
 #include "crtlib.h"
 #include "containers/array.h"
 #include "cmdline.h"

@@ -1,14 +1,12 @@
 #include "string.h"
 
-#include "port.h"
-#include "xash3d_types.h"
-#include "const.h"
+#include "../public.h"
 #include <math.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <time.h>
-#include "stdio.h"
-#include "crtlib.h"
+#include <stdio.h>
+#include "../crtlib.h"
 #include <string.h>
 #include <stdlib.h>
 
