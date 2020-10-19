@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(libpublic C CXX)
+project(public C CXX)
 
 set(SRCS 
         appframework.cpp 
@@ -24,6 +24,6 @@ elseif(UNIX)
         add_definitions(-DPOSIX -D_POSIX)
 endif() 
 
-add_library(libpublic SHARED ${SRCS})
+add_library(public SHARED ${SRCS})
 
-set_property(TARGET libpublic PROPERTY CXX_STANDARD 17)
+set_property(TARGET public PROPERTY CXX_STANDARD 17)
