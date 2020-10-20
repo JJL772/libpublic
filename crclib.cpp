@@ -347,7 +347,7 @@ the data and converts bytes into longwords for this routine.
 */
 void MD5Transform( uint buf[4], const uint in[16] )
 {
-	register uint	a, b, c, d;
+	uint	a, b, c, d;
 
 	a = buf[0];
 	b = buf[1];
