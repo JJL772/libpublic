@@ -1,13 +1,13 @@
 /**
- * 
- * platformspec.h - Platform specific code 
- * 
- */ 
+ *
+ * platformspec.h - Platform specific code
+ *
+ */
 #pragma once
 
-#undef GetCurrentTime
-
 #include "public.h"
+
+#undef GetCurrentTime
 
 namespace platform
 {
