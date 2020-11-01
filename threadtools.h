@@ -161,6 +161,19 @@ public:
 	CThreadRAIILock<CThreadMutex> RAIILock() { return CThreadRAIILock<CThreadMutex>(this); };
 };
 
+class EXPORT CFakeMutex
+{
+public:
+	CFakeMutex() {};
+	~CFakeMutex() {};
+
+	void Lock() {};
+	bool TryLock() { return true; };
+	void Unlock() {};
+
+	CThreadRAIILock<CFakeMutex> RAIILock() { return CThreadRAIILock<CFakeMutex>(this); };
+};
+
 /**
  * @brief Basic mutex class
  */
