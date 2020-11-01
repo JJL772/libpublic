@@ -57,6 +57,9 @@ public:
 	bool endswith(const String& subst) const;
 	bool endswith(const StringView& subst) const;
 
+	size_t find_first_of(char c) const;
+	size_t find_last_of(char c) const;
+
 	void to_lower();
 	void to_upper();
 	size_t replace(char c, char n, size_t max = 0);
@@ -134,6 +137,9 @@ public:
 	bool endswith(const char* subst) const;
 	bool endswith(const String& subst) const;
 	bool endswith(const StringView& subst) const;
+
+	size_t find_first_of(char c) const;
+	size_t find_last_of(char c) const;
 
 	/* Casting operators */
 	explicit operator const char*() const { return m_string; }

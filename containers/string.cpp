@@ -247,6 +247,22 @@ bool String::endswith(const StringView &subst) const
 	return Q_endswith(m_string, subst.m_string);
 }
 
+size_t String::find_first_of(char c) const
+{
+	for(size_t i = 0; i < m_length; i++)
+		if(m_string[i] == c)
+			return i;
+	return m_length;
+}
+
+size_t String::find_last_of(char c) const
+{
+	for(size_t i = m_length-1; i >= 0; i--)
+		if(m_string[i] == c)
+			return i;
+	return m_length;
+}
+
 
 StringView::StringView(const StringView &other) :
 	m_string(other.m_string),
@@ -442,4 +458,20 @@ bool StringView::endswith(const String &subst) const
 bool StringView::endswith(const StringView &subst) const
 {
 	return Q_endswith(m_string, subst.m_string);
+}
+
+size_t StringView::find_first_of(char c) const
+{
+	for(size_t i = 0; i < m_length; i++)
+		if(m_string[i] == c)
+			return i;
+	return m_length;
+}
+
+size_t StringView::find_last_of(char c) const
+{
+	for(size_t i = m_length-1; i >= 0; i--)
+		if(m_string[i] == c)
+			return i;
+	return m_length;
 }
