@@ -23,6 +23,8 @@ namespace platform
 		unsigned long long ns;
 
 		unsigned long long to_ns() const { return ns + (sec * 1000000000); };
+		double to_seconds() const { return sec + (ns/1e9); };
+		double to_ms() const { return (sec * 1e3) + (ns / 1e6); };
 
 		bool operator<(const time_t&) const;
 		bool operator<=(const time_t&) const;
@@ -30,6 +32,7 @@ namespace platform
 		bool operator>=(const time_t&) const;
 		bool operator==(const time_t&) const;
 		bool operator!=(const time_t&) const;
+
 	};
 
 	EXPORT time_t GetCurrentTime();
