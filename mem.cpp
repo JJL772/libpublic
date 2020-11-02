@@ -34,7 +34,7 @@ GNU General Public License for more details.
 #include <memory.h>
 
 /* Allocator global */
-CZoneAllocator* g_pZoneAllocator = new CZoneAllocator();
+CZoneAllocator* g_pZoneAllocator = NULL;
 
 #define MEMHEADER_SENTINEL1	0xDEADF00D
 #define MEMHEADER_SENTINEL2	0xDF
@@ -70,6 +70,7 @@ mempool_t *poolchain = NULL; // critical stuff
 
 EXPORT CZoneAllocator& GlobalAllocator()
 {
+	if(!g_pZoneAllocator) g_pZoneAllocator = new CZoneAllocator();
 	return *g_pZoneAllocator;
 }
 
