@@ -161,6 +161,9 @@ public:
 	CThreadRAIILock<CThreadMutex> RAIILock() { return CThreadRAIILock<CThreadMutex>(this); };
 };
 
+/**
+ * @brief Fake mutex class that does nothing
+ */
 class EXPORT CFakeMutex
 {
 public:
@@ -172,6 +175,26 @@ public:
 	void Unlock() {};
 
 	CThreadRAIILock<CFakeMutex> RAIILock() { return CThreadRAIILock<CFakeMutex>(this); };
+};
+
+class EXPORT CThreadRecursiveMutex
+{
+private:
+#ifdef _WIN32
+	void* m_mutex;
+#else
+	pthread_mutex_t m_mutex;
+	pthread_mutexattr_t m_attr;
+#endif
+public:
+	CThreadRecursiveMutex();
+	~CThreadRecursiveMutex();
+
+	void Lock();
+	bool TryLock();
+	void Unlock();
+
+	CThreadRAIILock<CThreadRecursiveMutex> RAIILock() { return CThreadRAIILock<CThreadRecursiveMutex>(this); };
 };
 
 /**

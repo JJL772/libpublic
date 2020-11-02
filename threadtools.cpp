@@ -136,6 +136,61 @@ void CThreadMutex::Unlock()
 #endif
 }
 
+//===========================================
+//
+//      CThreadRecursiveMutex
+//
+//===========================================
+
+CThreadRecursiveMutex::CThreadRecursiveMutex()
+{
+#ifdef _WIN32
+	m_mutex = CreateMutexA(NULL, TRUE, NULL);
+#else
+	pthread_mutexattr_init(&m_attr);
+	pthread_mutexattr_settype(&m_attr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&m_mutex, &m_attr);
+#endif
+}
+
+CThreadRecursiveMutex::~CThreadRecursiveMutex()
+{
+#ifdef _WIN32
+	CloseHandle(m_mutex);
+#else
+	pthread_mutex_destroy(&m_mutex);
+	pthread_mutexattr_destroy(&m_attr);
+#endif
+}
+
+void CThreadRecursiveMutex::Lock()
+{
+#ifdef _WIN32
+	WaitForSingleObject(m_mutex, INFINITE);
+#else
+	pthread_mutex_lock(&m_mutex);
+#endif
+}
+
+bool CThreadRecursiveMutex::TryLock()
+{
+#ifdef _WIN32
+	DWORD dwRes = WaitForSingleObject(m_mutex, 0);
+	return dwRes == WAIT_OBJECT_0;
+#else
+	return pthread_mutex_trylock(&m_mutex) == 0;
+#endif
+}
+
+void CThreadRecursiveMutex::Unlock()
+{
+#ifdef _WIN32
+	ReleaseMutex(m_mutex);
+#else
+	pthread_mutex_unlock(&m_mutex);
+#endif
+}
+
 
 //===========================================
 //
