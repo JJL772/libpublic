@@ -28,6 +28,8 @@ struct mod_t
 #ifdef _POSIX
 #include <dlfcn.h>
 
+#undef GetProcAddress
+
 void* GetProcAddress(void* hmod, const char* sym)
 {
 	return dlsym(hmod, sym);
