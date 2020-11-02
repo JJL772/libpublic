@@ -23,7 +23,13 @@ private:
 	std::atomic<I> m_writeIndex;
 public:
 
-	RingBuffer() = delete;
+	RingBuffer()
+	{
+		m_size = 0;
+		m_readIndex.store(0);
+		m_writeIndex.store(0);
+		m_data = nullptr;
+	}
 
 	explicit RingBuffer(size_t size) :
 		m_size(size)
