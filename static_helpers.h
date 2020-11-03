@@ -54,18 +54,19 @@ public:
 	}
 };
 
-template<void(*fn)()>
+
+template<void(*INIT)(), void(*SHUTDOWN)()>
 class CStaticInitDestroyWrapper
 {
 public:
 	CStaticInitDestroyWrapper()
 	{
-		fn();
+		INIT();
 	}
 
 	~CStaticInitDestroyWrapper()
 	{
-		fn();
+		SHUTDOWN();
 	}
 };
 
