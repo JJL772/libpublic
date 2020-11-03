@@ -10,6 +10,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+// DO NOT USE THIS YOU FUCKING RETARD
+#define strdup FUCK YOU BITCH
+#define malloc FUCK YOU BITCH
+#define free FUCK YOU BITCH
+
 String::String()
 {
 	this->m_length = 0;
@@ -19,7 +24,7 @@ String::String()
 String::String(const String &other) 
 {
 	this->m_length = other.m_length;
-	this->m_string = strdup(other.m_string);
+	this->m_string = Q_strdup(other.m_string);
 }
 
 String::String(String &&other) 
@@ -33,12 +38,12 @@ String::String(String &&other)
 String::String(const char *str) 
 {
 	this->m_length = strlen(str);
-	this->m_string = strdup(str);
+	this->m_string = Q_strdup(str);
 }
 
 String::~String() 
 {
-	if(this->m_string) free(m_string);
+	if(this->m_string) Q_free(m_string);
 }
 
 const char *String::c_str() const 
@@ -123,8 +128,8 @@ char String::operator[](size_t i) const
 
 String &String::operator=(const String &other) 
 {
-	if(this->m_string) free(this->m_string);
-	this->m_string = strdup(other.m_string);
+	if(this->m_string) Q_free(this->m_string);
+	this->m_string = Q_strdup(other.m_string);
 	this->m_length = other.m_length;
 	return *this;
 }
@@ -183,7 +188,7 @@ bool String::iequals(const StringView &other) const
 
 String &String::operator=(const StringView &other)
 {
-	if(m_string) free(m_string);
+	if(m_string) Q_free(m_string);
 	m_length = other.m_length;
 	m_string = Q_strdup(other.m_string);
 	return *this;
@@ -191,7 +196,7 @@ String &String::operator=(const StringView &other)
 
 String &String::operator=(const char *other)
 {
-	if(m_string) free(m_string);
+	if(m_string) Q_free(m_string);
 	m_length = strlen(other);
 	m_string = Q_strdup(other);
 	return *this;
