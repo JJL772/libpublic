@@ -6,6 +6,7 @@
 #undef GetCurrentTime
 #include <stack>
 #include <stdio.h>
+#include <ostream>
 
 CXProf* g_pXProf = NULL;
 
@@ -45,24 +46,9 @@ static xprof_node_desc_t g_categories[] =
 	{XPROF_CATEGORY_FRAME, 0}
 };
 
-
-class CXProfInit 
-{
-public:
-	CXProfInit()
-	{
-		if(!g_pXProf) g_pXProf = new CXProf();
-	}
-
-	~CXProfInit()
-	{
-		delete g_pXProf;
-	}
-};
-static CXProfInit g_xprof_init_wrapper;
-
 CXProf& GlobalXProf()
 {
+	if(!g_pXProf) g_pXProf = new CXProf();
 	return *g_pXProf;
 }
 
@@ -70,7 +56,13 @@ CXProf& GlobalXProf()
 CXProf::CXProf() :
 	m_enabled(true),
 	m_lastFrameTime(),
-	m_flags(0)
+	m_flags(0),
+	m_init(false),
+	m_fpsCounterBufferSize(XPROF_DEFAULT_FRAMEBUFFER_SIZE),
+	m_fpsCounterDataBuffer(),
+	m_fpsCounterTotalSamples(0),
+	m_fpsCounterSampleInterval(1.0f),
+	m_features(XProfFeatures())
 {
 	for(int i = 0; i < MAX_NODESTACKS; i++)
 	{
@@ -81,6 +73,7 @@ CXProf::CXProf() :
 	{
 		this->AddCategoryNode(g_categories[i].name, g_categories[i].budget);
 	}
+	m_init = true;
 }
 
 CXProf::~CXProf()
@@ -140,7 +133,7 @@ void CXProf::PushNode(CXProfNode* node)
 		parent = this->FindCategory(node->m_category);
 	else
 		parent = nodestack->top();
-	
+
 	if(!parent)
 	{
 		printf("Internal error while pushing node %s: Parent was nullptr. Category=%s\n",
@@ -159,6 +152,52 @@ void CXProf::PushNode(CXProfNode* node)
 	}
 	nodestack->push(node);
 }
+
+void CXProf::BeginFrame()
+{
+	auto lock = this->m_mutex.RAIILock();
+	m_frameStart = platform::GetCurrentTime();
+}
+
+void CXProf::EndFrame()
+{
+	auto lock = this->m_mutex.RAIILock();
+	m_lastFrameTime = platform::GetCurrentTime();
+	float frameDt = m_lastFrameTime.to_ms() - m_frameStart.to_ms();
+
+
+	/**
+	 * FRAME TIME HANDLING
+	 */
+	if(m_features.EnableFrameTimeCounter)
+	{
+		/* Initialize the ring buffer if it hasnt been already */
+		if(m_fpsCounterDataBuffer.size() == 0)
+			m_fpsCounterDataBuffer.resize(m_fpsCounterBufferSize);
+		/* Update the frame samples */
+		if (frameDt > m_fpsCounterCurrentSample.max_time)
+			m_fpsCounterCurrentSample.max_time = frameDt;
+		if (frameDt < m_fpsCounterCurrentSample.min_time)
+			m_fpsCounterCurrentSample.min_time = frameDt;
+		m_fpsCounterCurrentSample.num_frames++;
+		m_fpsCounterCurrentSample.avg =
+			((float) (m_fpsCounterCurrentSample.num_frames - 1) * m_fpsCounterCurrentSample.avg + frameDt) /
+			((float) m_fpsCounterCurrentSample.num_frames);
+
+		/* Check if it's been a second since the last time EndFrame was called and insert into frame time buffer */
+		double lastSecond = m_fpsCounterLastSampleTime.to_seconds();
+		if (lastSecond == 0.0)
+			m_fpsCounterLastSampleTime = platform::GetCurrentTime();
+		else if (lastSecond - m_lastFrameTime.to_seconds() > m_fpsCounterSampleInterval)
+		{
+			m_fpsCounterLastSampleTime = m_lastFrameTime;
+			m_fpsCounterDataBuffer.write(m_fpsCounterCurrentSample);
+			m_fpsCounterCurrentSample.clear();
+			m_fpsCounterTotalSamples++;
+		}
+	}
+}
+
 
 void CXProf::PopNode()
 {
@@ -235,13 +274,6 @@ void CXProf::DumpNodeTreeInternal(CXProfNode* node, int indent, int(*printFn)(co
 		DumpNodeTreeInternal(x, indent+1);
 }
 
-void CXProf::Frame(float dt)
-{
-	auto lock = m_mutex.RAIILock();
-	/* Simply record the last frame time */
-	m_lastFrameTime = platform::GetCurrentTime();
-}
-
 void CXProf::ClearNodes()
 {
 	auto lock = m_mutex.RAIILock();
@@ -315,6 +347,74 @@ class CXProfNode *CXProf::CurrentNode()
 
 	return m_nodeStack[index].top();
 }
+
+void CXProf::SetFrameCountBufferSize(size_t newsize)
+{
+	m_fpsCounterDataBuffer.resize(newsize);
+	m_fpsCounterBufferSize = newsize;
+}
+
+size_t CXProf::FrameCountBufferSize()
+{
+	return m_fpsCounterBufferSize;
+}
+
+void CXProf::DumpToJSON(std::ostream& stream)
+{
+	stream << "{";
+	/* First part is to write out basic info */
+	stream << "\"game_info\": {";
+	stream << "\"name\": \"" << PROJECT_NAME << "\",";
+	stream << "\"desc\": \"" << PROJECT_DESCRIPTION << "\",";
+	stream << "\"version\": \"" << PROJECT_VERSION << "\"";
+	stream << "},";
+
+	stream << "\"system_info\": {";
+	// TODO
+	stream << "},";
+
+	stream << "\"frame_times\": [";
+	// Perform a read sequence here, but make sure to adjust the read head in case we wrapped around.
+	// We do not want to lose any frame data.
+	if(m_fpsCounterTotalSamples > m_fpsCounterDataBuffer.size())
+		m_fpsCounterDataBuffer.set_read_index(m_fpsCounterDataBuffer.write_index());
+	for(int i = 0; i < m_fpsCounterDataBuffer.size(); i++)
+	{
+		XProfFrameData frame = m_fpsCounterDataBuffer.read();
+		stream << "{\"max\": " << frame.max_time << ", \"min\": " << frame.min_time << ", \"avg\": " <<
+			frame.avg << "}";
+		if(i != m_fpsCounterDataBuffer.size() - 1)
+			stream << ",";
+	}
+	stream << "],";
+
+	// Print out budget info. Nothing fancy here, still hirearchieal printing
+	stream << "\"budget_info\": [";
+
+	stream << "]";
+
+	stream << "}";
+}
+
+void CXProf::SetFrameSampleInterval(float seconds)
+{
+	/* Make sure our sample time is a sensible amount. Having it at 0 could cause big problems */
+	if(seconds < 0.05) return;
+	m_fpsCounterSampleInterval = seconds;
+}
+
+float CXProf::GetFrameSampleInterval()
+{
+	return m_fpsCounterSampleInterval;
+}
+
+void CXProf::SetFeatures(XProfFeatures features)
+{
+	// Do any special on-enable handling here
+	XProfFeatures oldFeatures = m_features;
+	m_features = features;
+}
+
 
 /*=======================================================
  *

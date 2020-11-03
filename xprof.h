@@ -5,6 +5,7 @@ xprof.h - Realtime profiling
 
 #include "containers/list.h"
 #include "containers/array.h"
+#include "containers/ringbuffer.h"
 #include "platformspec.h"
 #include "threadtools.h"
 
@@ -43,8 +44,15 @@ xprof.h - Realtime profiling
 #define XPROF_CATEGORY_COMMON "Common"
 #define XPROF_CATEGORY_FRAME "Frame"
 
+/*
+
 /* XProf Flags */
 #define XPROF_DUMP_ON_EXIT (1<<0)
+#define XPROF_RECORD_FRAME_DATA (1<<1) /* Record frame times and insert them into a ring buffer?? */
+
+/* Number of seconds of frame data to record by default */
+/* This will equal a total of 16kb of data (XProfFrameData is 16 bytes) */
+#define XPROF_DEFAULT_FRAMEBUFFER_SIZE 1024
 
 #undef GetCurrentTime
 
@@ -81,16 +89,69 @@ namespace xprof
 	}
 }
 
+/* Holds a total of 16 bytes of frame data for a 1 second run time of the engine */
+struct XProfFrameData
+{
+	float max_time;
+	float avg;
+	float min_time;
+	int num_frames;
+
+	void clear()
+	{
+		max_time = avg = 0.0f;
+		min_time = 1e9f;
+		num_frames = 0;
+	}
+};
+
+/* Struct with a list of features that xprof can enable or disable */
+struct XProfFeatures
+{
+	/**
+	 * XProf has an integrated frame time counter that is used to log FPS data to a file
+	 * for better profiling out of engine.
+	 * This has little overhead
+	 */
+	bool EnableFrameTimeCounter : 1;
+
+	/**
+	 * If your application is multithreaded, always enable this. In the event that you're
+	 * building a primarily single-threaded application, you should leave this off.
+	 * By default, it's on
+	 * TODO: Actually implement!
+	 */
+	bool EnableThreadSafety : 1;
+};
+
 class EXPORT CXProf
 {
 private:
+	/* Hirearcheal profiling data */
 	List<class CXProfNode*> m_nodes;
 	std::stack<class CXProfNode*> m_nodeStack[MAX_NODESTACKS];
 	unsigned long long m_nodeStackThreads[MAX_NODESTACKS];
+
+	/* General properties */
+	XProfFeatures m_features;
 	bool m_enabled;
-	mutable CThreadMutex m_mutex;
-	platform::time_t m_lastFrameTime;
+	bool m_init;
 	unsigned int m_flags;
+
+	/* For thread safety */
+	mutable CThreadRecursiveMutex m_mutex;
+
+	/* Properties that hold times */
+	platform::time_t m_lastFrameTime;
+	platform::time_t m_frameStart;
+
+	/* FPS Counter Properties */
+	size_t m_fpsCounterBufferSize;
+	size_t m_fpsCounterTotalSamples;
+	float m_fpsCounterSampleInterval; // For FPS counter
+	platform::time_t m_fpsCounterLastSampleTime;
+	XProfFrameData m_fpsCounterCurrentSample;
+	RingBuffer<XProfFrameData> m_fpsCounterDataBuffer;
 
 public:
 	CXProf();
@@ -104,11 +165,18 @@ public:
 	void PushNode(class CXProfNode* node);
 	void PopNode();
 
+	bool Initialized() const { return m_init; };
+
 	/* Returns a pointer to the current node.
 	 * NOT thread-safe. Lock before calling this! */
 	class CXProfNode* CurrentNode();
 
 	platform::time_t LastFrameTime() const { return m_lastFrameTime; };
+
+	/* Begins/Ends a frame and records various info
+	 * thread safe, BUT ONLY call from main thread */
+	void BeginFrame();
+	void EndFrame();
 
 	/* Use to report memory allocations/frees */
 	/* Thread-safe without locks */
@@ -117,9 +185,6 @@ public:
 	void ReportFree();
 
 	class CXProfNode* FindCategory(const char* name);
-
-	void SetFlag(unsigned int flag) { m_flags |= flag; };
-	void ClearFlag(unsigned int flag) { m_flags &= ~flag; };
 
 	/* Returns a list of category nodes */
 	/* THREAD SAFE */
@@ -134,9 +199,8 @@ public:
 	void DumpAllNodes(int(*printFn)(const char*,...) = printf);
 	void DumpCategoryTree(const char* cat, int(*printFn)(const char*,...) = printf);
 
-	/* A "frame". Resets all per-frame budgets */
-	/* THREAD SAFE */
-	void Frame(float dt = 0.0f);
+	/* Dumps all data to JSON format. Pass it a buffer to write into */
+	void DumpToJSON(std::ostream& stream);
 
 	/* Enables or disables xprof */
 	/* THREAD SAFE */
@@ -145,6 +209,19 @@ public:
 	void Disable();
 
 	void ClearNodes();
+
+	/* Change the size of the frame buffer counter */
+	void SetFrameCountBufferSize(size_t newsize);
+	size_t FrameCountBufferSize();
+	void SetFrameSampleInterval(float seconds);
+	float GetFrameSampleInterval();
+
+
+	/* Feature handling */
+	XProfFeatures Features() const { return m_features; }
+	void SetFeatures(XProfFeatures features);
+
+
 private:
 	void DumpNodeTreeInternal(class CXProfNode* node, int indent, int(*printFn)(const char*,...) = printf);
 };
@@ -267,12 +344,6 @@ public:
 	Array<CXProfTest> TestQueue() const;
 };
 
-#ifdef LIBPUBLIC
-EXPORT extern CXProf* g_pXProf;
-#else
-IMPORT extern CXProf* g_pXProf;
-#endif
-
 EXPORT CXProf& GlobalXProf();
 
 /* defined in header to avoid cross DLL calls */
@@ -286,10 +357,11 @@ public:
 	CXProfTest(CXProfNode* node) :
 		m_disabled(false)
 	{
-		m_disabled = !g_pXProf->Enabled();
+		m_disabled = !GlobalXProf().Enabled() || !GlobalXProf().Initialized();
+		if(m_disabled) return;
 		this->node = node;
 		start = platform::GetCurrentTime();
-		g_pXProf->PushNode(node);
+		GlobalXProf().PushNode(node);
 	}
 
 	~CXProfTest()
@@ -297,7 +369,7 @@ public:
 		if(m_disabled) return;
 		stop = platform::GetCurrentTime();
 		this->node->SubmitTest(this);
-		g_pXProf->PopNode();
+		GlobalXProf().PopNode();
 	}
 };
 
