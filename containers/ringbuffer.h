@@ -59,9 +59,9 @@ public:
 		T* tmp = (T*)Q_malloc(sizeof(T) * newsize);
 
 		/* Copy in the new stuff, taking into account the new size */
-		size_t oldsize = m_size*sizeof(T);
-		newsize = newsize * sizeof(T);
-		memcpy(tmp, m_data, oldsize > newsize ? newsize : oldsize);
+		memcpy(tmp, m_data, (m_size > newsize ? newsize : m_size) * sizeof(T));
+
+		m_size = newsize;
 	}
 
 	void lock()
