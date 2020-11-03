@@ -153,6 +153,9 @@ private:
 	XProfFrameData m_fpsCounterCurrentSample;
 	RingBuffer<XProfFrameData> m_fpsCounterDataBuffer;
 
+	/* List of shutdown hooks */
+	List<void(*)(CXProf&)> m_shutdownHooks;
+
 public:
 	CXProf();
 	~CXProf();
@@ -220,6 +223,11 @@ public:
 	/* Feature handling */
 	XProfFeatures Features() const { return m_features; }
 	void SetFeatures(XProfFeatures features);
+
+	/* Hooking Functions */
+	/* In case you need to do some reporting or cleanup right before xprof is shutdown */
+	void HookShutdown(void(*f)(CXProf&)) { m_shutdownHooks.push_back(f); };
+	void RemoveShutdownHook(void(*f)(CXProf&)) { m_shutdownHooks.remove(f); };
 
 
 private:

@@ -1,6 +1,7 @@
 #include "xprof.h"
 #include "public.h"
 #include "crtlib.h"
+#include "static_helpers.h"
 #undef min
 #undef max
 #undef GetCurrentTime
@@ -52,6 +53,13 @@ CXProf& GlobalXProf()
 	return *g_pXProf;
 }
 
+void kill_xprof()
+{
+	delete g_pXProf;
+}
+
+static CStaticDestructionWrapper<kill_xprof> g_xprofKiller;
+
 /* Constructor is NOT thread-safe, obviously! */
 CXProf::CXProf() :
 	m_enabled(true),
@@ -78,6 +86,8 @@ CXProf::CXProf() :
 
 CXProf::~CXProf()
 {
+	for(auto hook : m_shutdownHooks) hook(*this);
+
 	if(m_flags & XPROF_DUMP_ON_EXIT)
 	{
 		for(int i = 0; i < (sizeof(g_categories) / sizeof(g_categories[0])); i++)
@@ -188,7 +198,7 @@ void CXProf::EndFrame()
 		double lastSecond = m_fpsCounterLastSampleTime.to_seconds();
 		if (lastSecond == 0.0)
 			m_fpsCounterLastSampleTime = platform::GetCurrentTime();
-		else if (lastSecond - m_lastFrameTime.to_seconds() > m_fpsCounterSampleInterval)
+		else if (m_lastFrameTime.to_seconds() - lastSecond > m_fpsCounterSampleInterval)
 		{
 			m_fpsCounterLastSampleTime = m_lastFrameTime;
 			m_fpsCounterDataBuffer.write(m_fpsCounterCurrentSample);
@@ -378,12 +388,12 @@ void CXProf::DumpToJSON(std::ostream& stream)
 	// We do not want to lose any frame data.
 	if(m_fpsCounterTotalSamples > m_fpsCounterDataBuffer.size())
 		m_fpsCounterDataBuffer.set_read_index(m_fpsCounterDataBuffer.write_index());
-	for(int i = 0; i < m_fpsCounterDataBuffer.size(); i++)
+	for(int i = 0; i < m_fpsCounterDataBuffer.size() && i < m_fpsCounterTotalSamples; i++)
 	{
 		XProfFrameData frame = m_fpsCounterDataBuffer.read();
 		stream << "{\"max\": " << frame.max_time << ", \"min\": " << frame.min_time << ", \"avg\": " <<
 			frame.avg << "}";
-		if(i != m_fpsCounterDataBuffer.size() - 1)
+		if(i != m_fpsCounterDataBuffer.size() - 1 && i != m_fpsCounterTotalSamples - 1)
 			stream << ",";
 	}
 	stream << "],";
