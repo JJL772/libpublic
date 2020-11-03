@@ -62,6 +62,7 @@ public:
 		memcpy(tmp, m_data, (m_size > newsize ? newsize : m_size) * sizeof(T));
 
 		m_size = newsize;
+		m_data = tmp;
 	}
 
 	void lock()
