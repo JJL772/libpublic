@@ -8,6 +8,7 @@
 #include <stack>
 #include <stdio.h>
 #include <ostream>
+#include <iomanip>
 
 CXProf* g_pXProf = NULL;
 
@@ -175,6 +176,8 @@ void CXProf::EndFrame()
 	m_lastFrameTime = platform::GetCurrentTime();
 	float frameDt = m_lastFrameTime.to_ms() - m_frameStart.to_ms();
 
+	double currentTime = m_lastFrameTime.to_seconds();
+
 
 	/**
 	 * FRAME TIME HANDLING
@@ -198,12 +201,13 @@ void CXProf::EndFrame()
 		double lastSecond = m_fpsCounterLastSampleTime.to_seconds();
 		if (lastSecond == 0.0)
 			m_fpsCounterLastSampleTime = platform::GetCurrentTime();
-		else if (m_lastFrameTime.to_seconds() - lastSecond > m_fpsCounterSampleInterval)
+		else if (currentTime - lastSecond > m_fpsCounterSampleInterval)
 		{
 			m_fpsCounterLastSampleTime = m_lastFrameTime;
 			m_fpsCounterDataBuffer.write(m_fpsCounterCurrentSample);
 			m_fpsCounterCurrentSample.clear();
 			m_fpsCounterTotalSamples++;
+			m_fpsCounterCurrentSample.timestamp = currentTime;
 		}
 	}
 }
@@ -371,6 +375,9 @@ size_t CXProf::FrameCountBufferSize()
 
 void CXProf::DumpToJSON(std::ostream& stream)
 {
+	// Gotta increase the precision......
+	stream << std::setprecision(1000);
+
 	stream << "{";
 	/* First part is to write out basic info */
 	stream << "\"game_info\": {";
@@ -392,7 +399,7 @@ void CXProf::DumpToJSON(std::ostream& stream)
 	{
 		XProfFrameData frame = m_fpsCounterDataBuffer.read();
 		stream << "{\"max\": " << frame.max_time << ", \"min\": " << frame.min_time << ", \"avg\": " <<
-			frame.avg << "}";
+			frame.avg << ", \"timestamp\": " << frame.timestamp <<"}";
 		if(i != m_fpsCounterDataBuffer.size() - 1 && i != m_fpsCounterTotalSamples - 1)
 			stream << ",";
 	}

@@ -92,16 +92,18 @@ namespace xprof
 /* Holds a total of 16 bytes of frame data for a 1 second run time of the engine */
 struct XProfFrameData
 {
-	float max_time;
-	float avg;
-	float min_time;
-	int num_frames;
+	float max_time; // max frame time
+	float avg;      // average frame time
+	float min_time; // min frame time
+	int num_frames; // frames that passed during this sample point (not saved to file)
+	double timestamp; // timestamp in seconds since unix epoch. Corresponds to the *start* of the sample
 
 	void clear()
 	{
 		max_time = avg = 0.0f;
 		min_time = 1e9f;
 		num_frames = 0;
+		timestamp = 0.0;
 	}
 };
 
