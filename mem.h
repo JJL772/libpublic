@@ -1,9 +1,18 @@
 /*
- *
- * memory.h - Global memory interface.
- *
- */
+mem.cpp - zone memory allocation from DarkPlaces
+Copyright (C) 2007 Uncle Mike
+Copyright (C) 2020 Jeremy Lorelli
 
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
 /*
  * Originally this code was located in the engine and initialized early on in Host_Main.
  * However, with the addition of tier1 to the engine, and since we've ported a bunch of stuff to C++,
