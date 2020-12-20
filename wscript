@@ -8,8 +8,10 @@ import os
 top = '.'
 
 def options(opt):
-	# stub
-	return
+	grp = opt.add_option_group('libpublic options')
+	grp.add_option('--no-instrumentation', action='store_true', dest='NO_XPROF_INSTRUMENT', default=False,
+			   help='Disables the use of external instrumentation in xprof if it is available (e.g. vtune through ittnotify)')
+
 
 def configure(conf):
 	conf.env.append_unique('DEFINES', 'LIBPUBLIC=1')
@@ -23,13 +25,16 @@ def build(bld):
 	includes.append(str(bld.env.COMMON))
 	includes.append(str(bld.env.PUBLIC))
 	includes.append(str(bld.env.ENGINE))
-	includes.append(str(bld.env.ROOT))
+	includes.append('..')
 
 	if bld.env.DEST_OS != 'win32':
 		libs += ['RT', 'DL', 'PTHREAD']
 	else:
 		libs += ['USER32', 'SHELL32']
-        
+
+	if bld.env.HAVE_ITTNOTIFY and not bld.env.NO_XPROF_INSTRUMENT:
+		libs += ['ITTNOTIFY']
+
 	bld(
 		source   = source,
 		target   = 'public',

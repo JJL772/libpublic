@@ -23,6 +23,10 @@ GNU General Public License for more details.
 #include <ostream>
 #include <iomanip>
 
+#ifdef HAVE_ITTNOTIFY
+#include "ittnotify/ittnotify.h"
+#endif
+
 CXProf* g_pXProf = NULL;
 
 struct xprof_node_desc_t
@@ -445,6 +449,13 @@ void CXProf::SetFeatures(XProfFeatures features)
 	m_features = features;
 }
 
+void CXProf::SubmitEvent(const char *name)
+{
+#ifdef HAVE_ITTNOTIFY
+
+#endif
+}
+
 
 /*=======================================================
  *
@@ -452,7 +463,16 @@ void CXProf::SetFeatures(XProfFeatures features)
  *
  *======================================================= */
 
-CXProfNode::CXProfNode(const char* category, const char* function, const char* file, unsigned long long budget) :
+struct XProfNodePvt_t
+{
+	char m_domainName[512];
+#ifdef HAVE_ITTNOTIFY
+	__itt_domain* m_domain;
+	__itt_string_handle* m_funcNameHandle;
+#endif
+};
+
+CXProfNode::CXProfNode(const char* category, const char* function, const char* file, unsigned long long budget, const char* comment) :
 	m_timeBudget(budget),
 	m_function(function),
 	m_file(file),
@@ -477,14 +497,23 @@ CXProfNode::CXProfNode(const char* category, const char* function, const char* f
 	m_avgAllocBytes(0),
 	m_avgAllocs(0),
 	m_numFrames(0),
-	m_avgTime(0)
+	m_avgTime(0),
+	m_comment(comment),
+	m_pvt(nullptr)
 {
+	m_pvt = malloc(sizeof(XProfNodePvt_t));
+	XProfNodePvt_t* pvt = (XProfNodePvt_t*)m_pvt;
 
+	snprintf(pvt->m_domainName, sizeof(pvt->m_domainName), "%s:%s", function, category);
+#ifdef HAVE_ITTNOTIFY
+	pvt->m_domain = __itt_domain_create(pvt->m_domainName);
+	pvt->m_funcNameHandle = __itt_string_handle_create(function);
+#endif
 }
 
 CXProfNode::~CXProfNode()
 {
-
+	/* m_pvt is not freed here because of possible issues with the ittnotify library */
 }
 
 unsigned long long CXProfNode::GetRemainingBudget() const
@@ -515,6 +544,9 @@ void CXProfNode::SubmitTest(CXProfTest* test)
 	this->m_totalTime += elapsed;
 	this->m_absTotal += elapsed;
 	DoFrame();
+#ifdef XPROF_INSTRUMENT
+	ReportTaskEnd(test);
+#endif
 }
 
 void CXProfNode::SetBudget(unsigned long long int time)
@@ -597,4 +629,20 @@ void CXProfNode::ReportRealloc(size_t old, size_t newsize)
 	m_totalAllocBytes += ds;
 	m_frameAllocBytes += ds;
 	DoFrame();
+}
+
+void CXProfNode::ReportTaskBegin(CXProfTest *test)
+{
+	auto pvt = static_cast<XProfNodePvt_t*>(m_pvt);
+#ifdef HAVE_ITTNOTIFY
+	__itt_task_begin(pvt->m_domain, __itt_null, __itt_null, pvt->m_funcNameHandle);
+#endif
+}
+
+void CXProfNode::ReportTaskEnd(CXProfTest *test)
+{
+	auto pvt = static_cast<XProfNodePvt_t*>(m_pvt);
+#ifdef HAVE_ITTNOTIFY
+	__itt_task_end(pvt->m_domain);
+#endif
 }

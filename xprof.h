@@ -54,6 +54,12 @@ GNU General Public License for more details.
 #define XPROF_CATEGORY_COMMON "Common"
 #define XPROF_CATEGORY_FRAME "Frame"
 
+/* If we have the vtune library, enable external instrumentation */
+/* in the future, more external instrumentation libraries may be used */
+#if defined(HAVE_ITTNOTIFY)
+#       define XPROF_INSTRUMENT 1
+#endif
+
 /*
 
 /* XProf Flags */
@@ -241,6 +247,10 @@ public:
 	void HookShutdown(void(*f)(CXProf&)) { m_shutdownHooks.push_back(f); };
 	void RemoveShutdownHook(void(*f)(CXProf&)) { m_shutdownHooks.remove(f); };
 
+	/* Event submission */
+	/* This will signal the profiler when an event happens */
+	void SubmitEvent(const char* name);
+
 
 private:
 	void DumpNodeTreeInternal(class CXProfNode* node, int indent, int(*printFn)(const char*,...) = printf);
@@ -249,10 +259,12 @@ private:
 class EXPORT CXProfNode
 {
 private:
+	void* m_pvt;
 	CXProfNode* m_parent; /* Pointer to the node that is one above this, or null */
 	CXProfNode* m_root; /* Pointer to the "category" node. Aka the absolute root. Nullptr if this is the category */
 	List<CXProfNode*> m_children;
 	const char* m_function;
+	const char* m_comment;
 	bool m_added;
 	unsigned long long m_timeBudget;
 	unsigned long long m_totalTime; /* Total time for THIS NODE */
@@ -296,7 +308,8 @@ private:
 	void ReportRealloc(size_t old, size_t newsize);
 
 public:
-	CXProfNode(const char* category, const char* function, const char* file, unsigned long long budget);
+	CXProfNode(const char* category, const char* function, const char* file, unsigned long long budget, const char* comment = nullptr);
+
 	~CXProfNode();
 
 	CXProfNode(const CXProfNode& other)
@@ -353,6 +366,13 @@ public:
 	 */
 	void DoFrame();
 
+	/**
+	 * @brief Used to report test start for instrumentation that might be enabled.
+	 * @param test
+	 */
+	void ReportTaskBegin(class CXProfTest* test);
+	void ReportTaskEnd(class CXProfTest* test);
+
 	/* Accessors */
 	/* THREAD SAFE */
 	const char* Name() const { return m_function; };
@@ -379,38 +399,36 @@ public:
 	{
 		m_disabled = !GlobalXProf().Enabled() || !GlobalXProf().Initialized();
 		if(m_disabled) return;
+
+		/* Set the vars */
 		this->node = node;
 		start = platform::GetCurrentTime();
+
+#ifdef XPROF_INSTRUMENT
+		node->ReportTaskBegin(this);
+#endif
 		GlobalXProf().PushNode(node);
 	}
 
 	~CXProfTest()
 	{
 		if(m_disabled) return;
+
 		stop = platform::GetCurrentTime();
+
 		this->node->SubmitTest(this);
 		GlobalXProf().PopNode();
 	}
 };
 
+#ifdef _MSC_VER
+#       define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
+
 #ifdef ENABLE_XPROF
-
-#ifndef _MSC_VER
-
-#define XPROF_NODE(category) \
-static CXProfNode* __xprof_node = new CXProfNode((category), __PRETTY_FUNCTION__, __FILE__, 0); \
-CXProfTest __xprof_test(__xprof_node);
-
+	#define XPROF_NODE(category) \
+	static CXProfNode* __xprof_node = new CXProfNode((category), __PRETTY_FUNCTION__, __FILE__, 0); \
+	CXProfTest __xprof_test__ ## __COUNTER__ (__xprof_node);
 #else
-
-#define XPROF_NODE(category) \
-static CXProfNode* __xprof_node = new CXProfNode((category), __FUNCSIG__, __FILE__, 0); \
-CXProfTest __xprof_test(__xprof_node);
-
-#endif // msc
-
-#else
-
-#define XPROF_NODE(c)
-
+	#define XPROF_NODE(c)
 #endif
