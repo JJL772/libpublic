@@ -124,6 +124,15 @@ LogChannel Log::GetChannelByName(const char* name)
 LogChannel Log::CreateChannel(const char* name, LogColor color)
 {
 	auto lock = GlobalLogMutex()->RAIILock();
+	auto& channels = GlobalChannelList();
+
+	/* if already registered, just return the existing channel */
+	for(int i = 0; i < channels.size(); i++)
+	{
+		if(channels[i].name.equals(name))
+			return i;
+	}
+
 
 	LogChannelDescription_t chan;
 	chan.name = name;
@@ -136,8 +145,8 @@ LogChannel Log::CreateChannel(const char* name, LogColor color)
 			chan.backends.push_back(c);
 	}
 
-	GlobalChannelList().push_back(chan);
-	return GlobalChannelList().size()-1;
+	channels.push_back(chan);
+	return channels.size()-1;
 }
 
 
