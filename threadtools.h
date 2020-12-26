@@ -69,6 +69,15 @@ namespace threadtools
 	typedef std::atomic<void*> AtomicPtr;
 	typedef std::atomic_int32_t AtomicInt;
 
+	static inline void sleep(unsigned long long msec)
+	{
+#ifdef _POSIX
+		usleep(msec * 1000);
+#else
+		sleep(msec);
+#endif
+	}
+
 
 	static inline void mfence()
 	{
@@ -98,6 +107,9 @@ namespace threadtools
 	}
 }
 
+/**
+ * Simple thread class
+ */
 class EXPORT CThread
 {
 private:

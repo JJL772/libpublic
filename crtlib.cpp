@@ -202,6 +202,7 @@ char* Q_fmtcolorstr(const char* s, char* out, size_t n, const unsigned char colo
 	return Q_fmtcolorstr(s, out, n, color_table, g_default_format_modifiers);
 }
 
+// TODO: PROFILE THIS!!
 char* Q_fmtcolorstr(const char* s, char* out, size_t sz,  const unsigned char color_table[10][3], const unsigned char format_modifiers[10])
 {
 	if(!s || !out) return nullptr;
@@ -234,9 +235,11 @@ char* Q_fmtcolorstr(const char* s, char* out, size_t sz,  const unsigned char co
 			}
 
 			i++;
-			if(i >= nlen+1) break;
-			if(s[i] > '9' || s[i] < '0') continue;
-			ptrs[cur_str].color_index = s[i] - 0x30; // Convert to char for the actual index
+			if(i >= nlen+1)
+				break;
+			if(s[i] > '9' || s[i] < '0')
+				continue;
+			ptrs[cur_str].color_index = (char)(s[i] - 0x30); // Convert to char for the actual index
 			ptrs[cur_str].ptr = &s[i+1]; // set the pointer to the start of the substring
 			prevlen = i+1; // set the previous index
 			continue;
@@ -258,20 +261,20 @@ char* Q_fmtcolorstr(const char* s, char* out, size_t sz,  const unsigned char co
 	int total_printed = 0;
 	for(int i = 0; i < color_strs; i++)
 	{
-		if(!ptrs[i].ptr) continue;
-#ifndef _WIN32
+		if(!ptrs[i].ptr)
+			continue;
+
+		/* Windows 10 anniversary edition supports ANSI escape codes for colors in CMD */
 		/* Print in the color string */
 		const unsigned char* color = color_table[(int)ptrs[i].color_index];
 		unsigned char mod = format_conversion_table[format_modifiers[(int)ptrs[i].color_index]];
 		char fmtstr[32];
 		if(mod != 0)
-			total_printed += snprintf(fmtstr, sizeof(fmtstr), "\e[38;2;%u;%u;%um\e[%um", (unsigned char)color[0], (unsigned char)color[1], (unsigned char)color[2], mod);
+			total_printed += snprintf(fmtstr, sizeof(fmtstr), "\x1b[38;2;%u;%u;%um\x1b[%um", (unsigned char)color[0], (unsigned char)color[1], (unsigned char)color[2], mod);
 		else
-			total_printed += snprintf(fmtstr, sizeof(fmtstr), "\e[38;2;%u;%u;%um", (unsigned char)color[0], (unsigned char)color[1], (unsigned char)color[2]);
+			total_printed += snprintf(fmtstr, sizeof(fmtstr), "\x1b[38;2;%u;%u;%um", (unsigned char)color[0], (unsigned char)color[1], (unsigned char)color[2]);
 		strncat(out, fmtstr, sz);
-#else
 
-#endif
 		/* Concat the rest of it */
 		/* NOTE: Using memcpy here because the string is not null terminated */
 		if(ptrs[i].len + total_printed > sz)
@@ -289,6 +292,96 @@ char* Q_fmtcolorstr(const char* s, char* out, size_t sz,  const unsigned char co
 		total_printed += ptrs[i].len;
 	}
 	return out;
+}
+
+void Q_fmtcolorstr_stream(FILE* stream, const char* s)
+{
+	Q_fmtcolorstr_stream(stream, s, g_default_color_table, g_default_format_modifiers);
+}
+
+void Q_fmtcolorstr_stream(FILE* stream, const char* s, const unsigned char color_table[10][3])
+{
+	Q_fmtcolorstr_stream(stream, s, color_table, g_default_format_modifiers);
+}
+
+void Q_fmtcolorstr_stream(FILE* stream, const char* s, const unsigned char color_table[10][3], const unsigned char format_modifiers[10])
+{
+	if(!s)
+		return;
+
+	struct color_str_ptr {
+		const char* ptr;
+		size_t len;
+		char color_index;
+	};
+
+	/* Allocate and clear string list */
+	int color_strs = Q_colorstr(s) / 2; // NOTE: colorstr returns counts in muliples of 2, for the char count of the actual "color string"
+	color_str_ptr* ptrs = (color_str_ptr*)Q_alloca(sizeof(color_str_ptr) * color_strs);
+	memset(ptrs, 0, sizeof(color_str_ptr) * color_strs);
+
+	int cur_str = 0;
+	size_t nlen = Q_strlen(s);
+	size_t prevlen = 0;
+
+	for(size_t i = 0; i < nlen; i++)
+	{
+		if(s[i] == '^')
+		{
+			/* If the current pointer is set, that means we've already come through this routine once. */
+			/* So compute the length and increment the current string */
+			if(ptrs[cur_str].ptr)
+			{
+				ptrs[cur_str].len = i - prevlen;
+				cur_str++;
+			}
+
+			i++;
+			if(i >= nlen+1)
+				break;
+			if(s[i] > '9' || s[i] < '0')
+				continue;
+			ptrs[cur_str].color_index = (char)(s[i] - 0x30); // Convert to char for the actual index
+			ptrs[cur_str].ptr = &s[i+1]; // set the pointer to the start of the substring
+			prevlen = i+1; // set the previous index
+			continue;
+		}
+	}
+	/* Set the last length to nlen - prevlen */
+	ptrs[cur_str].len = nlen - prevlen;
+
+	/* Index is the format specifier (FMT_XXX) */
+	static int format_conversion_table[] = {
+		0, // FMT_NONE
+		1, // FMT_BOLD
+		4, // FMT_UNDERLINE
+		5, // FMT_BLINK
+	};
+
+	/* if we have no color strs, just print verbatim */
+	if(color_strs == 0)
+	{
+		fputs(s, stream);
+		return;
+	}
+
+	/* Loop through our list of strings and concatenate them, including coloring info */
+	for(int i = 0; i < color_strs; i++)
+	{
+		if(!ptrs[i].ptr)
+			continue;
+
+		/* Windows 10 anniversary edition supports ANSI escape codes for colors in CMD */
+		/* Print in the color string */
+		const unsigned char* color = color_table[(int)ptrs[i].color_index];
+		unsigned char mod = format_conversion_table[format_modifiers[(int)ptrs[i].color_index]];
+		if(mod != 0)
+			fprintf(stream, "\x1b[38;2;%u;%u;%um\x1b[%um", (unsigned char)color[0], (unsigned char)color[1], (unsigned char)color[2], mod);
+		else
+			fprintf(stream, "\x1b[38;2;%u;%u;%um", (unsigned char)color[0], (unsigned char)color[1], (unsigned char)color[2]);
+		fwrite(ptrs[i].ptr, ptrs[i].len, 1, stream);
+	}
+	fputs("\x1b[0m", stream);
 }
 
 char Q_toupper(const char in)

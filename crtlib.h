@@ -123,6 +123,9 @@ EXPORT void  Q_free(void* blk);
 EXPORT char* Q_fmtcolorstr(const char* s, char* out, size_t n);
 EXPORT char* Q_fmtcolorstr(const char* s, char* out, size_t n, const unsigned char color_table[10][3]);
 EXPORT char* Q_fmtcolorstr(const char* s, char* out, size_t n, const unsigned char color_table[10][3], const unsigned char modifier_table[10]);
+EXPORT void Q_fmtcolorstr_stream(FILE* stream, const char* s);
+EXPORT void Q_fmtcolorstr_stream(FILE* stream, const char* s, const unsigned char color_table[10][3]);
+EXPORT void Q_fmtcolorstr_stream(FILE* stream, const char* s, const unsigned char color_table[10][3], const unsigned char modifer_table[10]);
 
 /* Safe string conversions */
 EXPORT bool Q_strint(const char* str, int& out, int base = 10);
