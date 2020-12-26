@@ -141,7 +141,7 @@ LogChannel Log::CreateChannel(const char* name, LogColor color)
 	auto& backendlist = GlobalBackendList();
 	for(LogChannel c = 0; c < backendlist.size(); c++)
 	{
-		if(backendlist[c]->m_enabledForAll)
+		if(backendlist[c]->m_enabledForAll && !chan.backends.contains(c))
 			chan.backends.push_back(c);
 	}
 
@@ -228,7 +228,8 @@ void Log::EnableBackend(LogBackend backend)
 
 	for(auto& c : GlobalChannelList())
 	{
-		c.backends.push_back(backend);
+		if(!c.backends.contains(backend))
+			c.backends.push_back(backend);
 	}
 }
 
