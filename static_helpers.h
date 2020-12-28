@@ -20,62 +20,36 @@ GNU General Public License for more details.
  * @tparam fn
  * @tparam T
  */
-template<void(*fn)()>
-class CStaticInitWrapper
+template <void (*fn)()> class CStaticInitWrapper
 {
 public:
-	CStaticInitWrapper()
-	{
-		fn();
-	}
+	CStaticInitWrapper() { fn(); }
 
-	~CStaticInitWrapper()
-	{
-	}
+	~CStaticInitWrapper() {}
 };
 
 class CLambdaStaticInitWrapper
 {
 public:
-	CLambdaStaticInitWrapper(void(*fn)())
-	{
-		fn();
-	}
+	CLambdaStaticInitWrapper(void (*fn)()) { fn(); }
 
-	~CLambdaStaticInitWrapper()
-	{
-
-	}
+	~CLambdaStaticInitWrapper() {}
 };
 
-template<void(*fn)()>
-class CStaticDestructionWrapper
+template <void (*fn)()> class CStaticDestructionWrapper
 {
 public:
-	CStaticDestructionWrapper()
-	{
-	}
+	CStaticDestructionWrapper() {}
 
-	~CStaticDestructionWrapper()
-	{
-		fn();
-	}
+	~CStaticDestructionWrapper() { fn(); }
 };
 
-
-template<void(*INIT)(), void(*SHUTDOWN)()>
-class CStaticInitDestroyWrapper
+template <void (*INIT)(), void (*SHUTDOWN)()> class CStaticInitDestroyWrapper
 {
 public:
-	CStaticInitDestroyWrapper()
-	{
-		INIT();
-	}
+	CStaticInitDestroyWrapper() { INIT(); }
 
-	~CStaticInitDestroyWrapper()
-	{
-		SHUTDOWN();
-	}
+	~CStaticInitDestroyWrapper() { SHUTDOWN(); }
 };
 
-#define CallDuringStaticInit(x) static auto __static__ ## x ## __caller = CStaticInitWrapper<x>();
+#define CallDuringStaticInit(x) static auto __static__##x##__caller = CStaticInitWrapper<x>();

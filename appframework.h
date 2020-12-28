@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 /* Make sure these dumbos are not here */
 #undef min
-#undef max 
+#undef max
 #include <initializer_list>
 #include <functional>
 #include "public.h"
@@ -40,12 +40,12 @@ GNU General Public License for more details.
  * Version numbers are rather abstract, and they're a part of the interface parent name itself (e.g. 001 in the above example)
  *
  * Interfaces are loaded into interface "slots". Basically you have an interface implementation, such as IEngineFilesystem001, which
- * is an implementation of IFilesystem001. So, when you load IEngineFilesystem001, it's loaded into the IFilesystem001 slot. When other modules lookup interfaces,
- * they refer to the "slot" name, in this case IFilesystem001, and the IEngineFilesystem001 implementation is returned.
- * 
+ * is an implementation of IFilesystem001. So, when you load IEngineFilesystem001, it's loaded into the IFilesystem001 slot. When other modules lookup
+ * interfaces, they refer to the "slot" name, in this case IFilesystem001, and the IEngineFilesystem001 implementation is returned.
+ *
  * Implementation NOTES:
  *  - AppFramework acts as a state machine, so it should only be called from the main thread
- *  - There are some pretty terrible hacks in here, which does make me somewhat sad 
+ *  - There are some pretty terrible hacks in here, which does make me somewhat sad
  */
 
 class IAppInterface
@@ -60,7 +60,6 @@ public:
 	virtual bool Init() = 0;
 
 	virtual void Shutdown() = 0;
-
 };
 
 typedef struct
@@ -80,7 +79,7 @@ EXPORT typedef void* (*pfnCreateInterface)(const char*, int*);
 /* Used for the iface status parameter in pfnCreateInterface */
 enum EIfaceStatus
 {
-	OK = 0,
+	OK     = 0,
 	FAILED = 1,
 };
 
@@ -101,77 +100,74 @@ enum EIfaceStatus
 
 namespace AppFramework
 {
-	struct interface_t
-	{
-		const char* module;
-		const char* iface;
-	};
+struct interface_t
+{
+	const char* module;
+	const char* iface;
+};
 
-	/**
-	 * @brief Adds an interface to the load list
-	 * @param module shared object or DLL this comes from
-	 * @param iface Interface name
-	 * @return True if added, false otherwise
-	 */
-	EXPORT bool AddInterface(const char* module, const char* iface);
+/**
+ * @brief Adds an interface to the load list
+ * @param module shared object or DLL this comes from
+ * @param iface Interface name
+ * @return True if added, false otherwise
+ */
+EXPORT bool AddInterface(const char* module, const char* iface);
 
-	EXPORT bool AddInterfaces(std::initializer_list<interface_t> interfaces); 
-	EXPORT bool AddInterfaces(interface_t* interfaces);
+EXPORT bool AddInterfaces(std::initializer_list<interface_t> interfaces);
+EXPORT bool AddInterfaces(interface_t* interfaces);
 
-	/**
-	 * @brief Gets the last error that happened or empty string
-	 * @return last error
-	 */ 
-	EXPORT const char* GetLastError();
+/**
+ * @brief Gets the last error that happened or empty string
+ * @return last error
+ */
+EXPORT const char* GetLastError();
 
-	/**
-	 * @brief Called to load all interfaces queued for load
-	 * @return True if OK, false if something failed
-	 */
-	EXPORT bool LoadInterfaces();
+/**
+ * @brief Called to load all interfaces queued for load
+ * @return True if OK, false if something failed
+ */
+EXPORT bool LoadInterfaces();
 
-	/**
-	 * @brief Finds a pointer to a loaded interface
-	 * @param iface Name of the interface
-	 * @return Pointer to the iface or NULL if not found
-	 */
-	EXPORT void* FindInterface(const char* iface);
+/**
+ * @brief Finds a pointer to a loaded interface
+ * @param iface Name of the interface
+ * @return Pointer to the iface or NULL if not found
+ */
+EXPORT void* FindInterface(const char* iface);
 
-	/**
-	 * @brief Unloads all added interfaces
-	 */
-	EXPORT void UnloadInterfaces();
+/**
+ * @brief Unloads all added interfaces
+ */
+EXPORT void UnloadInterfaces();
 
-	/**
-	 * Set a custom LoadLibrary/FreeLibrary function
-	 */ 
-	EXPORT void SetLoadLibrary(std::function<void*(const char*)> fn);
-	EXPORT void SetFreeLibrary(std::function<void(void*)> fn);
-	EXPORT void ClearCustomFunctions();
+/**
+ * Set a custom LoadLibrary/FreeLibrary function
+ */
+EXPORT void SetLoadLibrary(std::function<void*(const char*)> fn);
+EXPORT void SetFreeLibrary(std::function<void(void*)> fn);
+EXPORT void ClearCustomFunctions();
 
+/**
+ * Utility class that maintains a handle to an arbitrary AppSystem.
+ * The handle returned from this is guaranteed to be valid, as SIGABRT will be raised if the interface is not found
+ *
+ * USAGE:
+ * 	CAppSystemHandle<ILoggingSystem> g_LoggingSystem(IENGINELOGGING_INTERFACE);
+ * 	g_LoggingSystem.Get().Log(....);
+ */
+template <class T> class CAppSystemHandle
+{
+public:
+	CAppSystemHandle(const char* iface_name);
 
-	/**
-	 * Utility class that maintains a handle to an arbitrary AppSystem.
-	 * The handle returned from this is guaranteed to be valid, as SIGABRT will be raised if the interface is not found
-	 *
-	 * USAGE:
-	 * 	CAppSystemHandle<ILoggingSystem> g_LoggingSystem(IENGINELOGGING_INTERFACE);
-	 * 	g_LoggingSystem.Get().Log(....);
-	 */
-	template<class T>
-	class CAppSystemHandle
-	{
-	public:
-		CAppSystemHandle(const char* iface_name);
+	T&	 Get();
+	const T& Get() const;
 
-		T& Get();
-		const T& Get() const;
-
-
-		void Load();
-		bool IsLoaded();
-	};
-}
+	void Load();
+	bool IsLoaded();
+};
+} // namespace AppFramework
 
 /*
 =======================
@@ -181,42 +177,52 @@ namespace AppFramework
 =======================
 */
 
-#define EXPOSE_INTERFACE(_int) \
-extern List<IAppInterface*>* g_pInterfaces; \
-class __CStaticWrapperForInterfaces_ ## _int { \
-public:\
-	__CStaticWrapperForInterfaces_ ## _int () {\
-		if(!g_pInterfaces) g_pInterfaces = new List<IAppInterface*>();\
-		g_pInterfaces->push_back(new _int ()); \
-	}\
-}; \
-static __CStaticWrapperForInterfaces_ ## _int g_ ## _int ##_InterfaceGlobal;
+#define EXPOSE_INTERFACE(_int)                                                                                                                       \
+	extern List<IAppInterface*>* g_pInterfaces;                                                                                                  \
+	class __CStaticWrapperForInterfaces_##_int                                                                                                   \
+	{                                                                                                                                            \
+	public:                                                                                                                                      \
+		__CStaticWrapperForInterfaces_##_int()                                                                                               \
+		{                                                                                                                                    \
+			if (!g_pInterfaces)                                                                                                          \
+				g_pInterfaces = new List<IAppInterface*>();                                                                          \
+			g_pInterfaces->push_back(new _int());                                                                                        \
+		}                                                                                                                                    \
+	};                                                                                                                                           \
+	static __CStaticWrapperForInterfaces_##_int g_##_int##_InterfaceGlobal;
 
 /* For the CreateInterface impl */
-#define MODULE_INTERFACE_IMPL() \
-List<IAppInterface*>* g_pInterfaces; \
-extern "C" EXPORT void* CreateInterface(const char* name, int* retcode) {\
-	if(!g_pInterfaces) {\
-		*retcode = (int)EIfaceStatus::FAILED; \
-		return nullptr; \
-	} \
-	for(auto x : *g_pInterfaces) { \
-		if(strcmp(x->GetName(), name) == 0) { \
-			*retcode = (int)EIfaceStatus::OK; \
-			return x; \
-		} \
-	} \
-	*retcode = (int)EIfaceStatus::FAILED; \
-	return 0; \
-} \
-extern "C" EXPORT iface_t* GetInterfaces(int* num) { \
-	static iface_t* __iface_list = 0;  \
-	if(!__iface_list) __iface_list = new iface_t[g_pInterfaces->size()]; \
-	int i = 0;\
-	for(auto x : *g_pInterfaces) {\
-		__iface_list[i] = iface_t{x->GetName(), x->GetParentInterface()}; i++; \
-	}\
-	*num = g_pInterfaces->size(); \
-	return __iface_list; \
-}
-
+#define MODULE_INTERFACE_IMPL()                                                                                                                      \
+	List<IAppInterface*>*	g_pInterfaces;                                                                                                       \
+	extern "C" EXPORT void* CreateInterface(const char* name, int* retcode)                                                                      \
+	{                                                                                                                                            \
+		if (!g_pInterfaces)                                                                                                                  \
+		{                                                                                                                                    \
+			*retcode = (int)EIfaceStatus::FAILED;                                                                                        \
+			return nullptr;                                                                                                              \
+		}                                                                                                                                    \
+		for (auto x : *g_pInterfaces)                                                                                                        \
+		{                                                                                                                                    \
+			if (strcmp(x->GetName(), name) == 0)                                                                                         \
+			{                                                                                                                            \
+				*retcode = (int)EIfaceStatus::OK;                                                                                    \
+				return x;                                                                                                            \
+			}                                                                                                                            \
+		}                                                                                                                                    \
+		*retcode = (int)EIfaceStatus::FAILED;                                                                                                \
+		return 0;                                                                                                                            \
+	}                                                                                                                                            \
+	extern "C" EXPORT iface_t* GetInterfaces(int* num)                                                                                           \
+	{                                                                                                                                            \
+		static iface_t* __iface_list = 0;                                                                                                    \
+		if (!__iface_list)                                                                                                                   \
+			__iface_list = new iface_t[g_pInterfaces->size()];                                                                           \
+		int i = 0;                                                                                                                           \
+		for (auto x : *g_pInterfaces)                                                                                                        \
+		{                                                                                                                                    \
+			__iface_list[i] = iface_t{x->GetName(), x->GetParentInterface()};                                                            \
+			i++;                                                                                                                         \
+		}                                                                                                                                    \
+		*num = g_pInterfaces->size();                                                                                                        \
+		return __iface_list;                                                                                                                 \
+	}

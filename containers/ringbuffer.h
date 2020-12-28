@@ -18,19 +18,18 @@ GNU General Public License for more details.
 #include "crtlib.h"
 #include "threadtools.h"
 
-template<class T, class MutexT = CFakeMutex, class I = unsigned int>
-class RingBuffer final
+template <class T, class MutexT = CFakeMutex, class I = unsigned int> class RingBuffer final
 {
 private:
-	T* m_data;
+	T*	  m_data;
 	typedef I IndexType;
-	MutexT m_mutex;
+	MutexT	  m_mutex;
 
-	size_t m_size;
+	size_t	       m_size;
 	std::atomic<I> m_readIndex;
 	std::atomic<I> m_writeIndex;
-public:
 
+public:
 	RingBuffer()
 	{
 		m_size = 0;
@@ -39,8 +38,7 @@ public:
 		m_data = nullptr;
 	}
 
-	explicit RingBuffer(size_t size) :
-		m_size(size)
+	explicit RingBuffer(size_t size) : m_size(size)
 	{
 		m_readIndex.store(0);
 		m_writeIndex.store(0);
@@ -49,20 +47,18 @@ public:
 
 	~RingBuffer()
 	{
-		if(m_data) Q_free(m_data);
+		if (m_data)
+			Q_free(m_data);
 	}
 
-
-	size_t size() const
-	{
-		return m_size;
-	}
+	size_t size() const { return m_size; }
 
 	/* SIZE is in number of elements */
 	void resize(size_t newsize)
 	{
 		auto lck = m_mutex.RAIILock();
-		if(newsize <= 0) return;
+		if (newsize <= 0)
+			return;
 
 		T* tmp = (T*)Q_malloc(sizeof(T) * newsize);
 
@@ -73,60 +69,43 @@ public:
 		m_data = tmp;
 	}
 
-	void lock()
-	{
-		m_mutex.Lock();
-	}
+	void lock() { m_mutex.Lock(); }
 
-	void unlock()
-	{
-		m_mutex.Unlock();
-	}
+	void unlock() { m_mutex.Unlock(); }
 
-	const T* data() const
-	{
-		return m_data;
-	}
+	const T* data() const { return m_data; }
 
-	IndexType read_index() const
-	{
-		return m_readIndex.load();
-	}
+	IndexType read_index() const { return m_readIndex.load(); }
 
-	IndexType write_index() const
-	{
-		return m_writeIndex.load();
-	}
+	IndexType write_index() const { return m_writeIndex.load(); }
 
-	void set_read_index(IndexType i)
-	{
-		m_readIndex.store(i);
-	}
+	void set_read_index(IndexType i) { m_readIndex.store(i); }
 
-	void set_writeIndex(IndexType i)
-	{
-		m_writeIndex.store(i);
-	}
+	void set_writeIndex(IndexType i) { m_writeIndex.store(i); }
 
 	T read()
 	{
-		auto lck = m_mutex.RAIILock();
+		auto	  lck	= m_mutex.RAIILock();
 		IndexType index = m_readIndex.load();
 
 		const T* t = &m_data[index];
-		if(index >= m_size) m_readIndex.store(0);
-		else m_readIndex.store(index+1);
+		if (index >= m_size)
+			m_readIndex.store(0);
+		else
+			m_readIndex.store(index + 1);
 		return *t;
 	}
 
 	void write(const T& elem)
 	{
-		auto lck = m_mutex.RAIILock();
+		auto	  lck	= m_mutex.RAIILock();
 		IndexType index = m_writeIndex.load();
 
 		m_data[index] = elem;
-		if(index >= m_size) m_writeIndex.store(0);
-		else m_writeIndex.store(index+1);
+		if (index >= m_size)
+			m_writeIndex.store(0);
+		else
+			m_writeIndex.store(index + 1);
 	}
 
 	RingBuffer& operator=(const RingBuffer& buf)
@@ -134,12 +113,13 @@ public:
 		buf.m_mutex.Lock();
 		this->m_mutex.Lock();
 
-		if(m_data) Q_free(m_data);
+		if (m_data)
+			Q_free(m_data);
 		m_data = Q_malloc(buf.m_size * sizeof(T));
 		memcpy(m_data, buf.m_data, sizeof(T) * buf.m_size);
 		m_writeIndex = buf.m_writeIndex;
-		m_readIndex = buf.m_readIndex;
-		m_size = buf.m_size;
+		m_readIndex  = buf.m_readIndex;
+		m_size	     = buf.m_size;
 
 		buf.m_mutex.Unlock();
 		this->m_mutex.Unlock();
@@ -152,10 +132,10 @@ public:
 		buf.m_mutex.Lock();
 		m_mutex.Lock();
 
-		m_data = buf.m_data;
-		m_readIndex = buf.m_readIndex;
+		m_data	     = buf.m_data;
+		m_readIndex  = buf.m_readIndex;
 		m_writeIndex = buf.m_writeIndex;
-		m_size = buf.m_size;
+		m_size	     = buf.m_size;
 
 		m_mutex.Unlock();
 		buf.m_mutex.Unlock();
@@ -169,5 +149,4 @@ public:
 	}
 };
 
-template<class T, class I>
-using RingBufferTS = RingBuffer<T, CThreadSpinlock, I>;
+template <class T, class I> using RingBufferTS = RingBuffer<T, CThreadSpinlock, I>;

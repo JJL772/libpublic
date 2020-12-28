@@ -29,16 +29,13 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <stdlib.h>
 
-
 //===========================================
 //
 //      CThread
 //
 //===========================================
 
-CThread::CThread(void *(*threadfn)(void *)) :
-	m_threadfn(threadfn),
-	m_run(false)
+CThread::CThread(void* (*threadfn)(void*)) : m_threadfn(threadfn), m_run(false)
 {
 #ifdef _WIN32
 	hThread = nullptr;
@@ -50,13 +47,13 @@ CThread::CThread(void *(*threadfn)(void *)) :
 void CThread::Run(void* pvt)
 {
 #ifdef _WIN32
-	if(m_run && hThread)
+	if (m_run && hThread)
 		TerminateThread(hThread, 1);
 	DWORD dwThreadId;
 	hThread = CreateThread(NULL, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(m_threadfn), pvt, 0, &dwThreadId);
-	m_run = true;
+	m_run	= true;
 #else
-	if(m_run)
+	if (m_run)
 	{
 		pthread_cancel(m_thread);
 	}
@@ -68,7 +65,7 @@ void CThread::Run(void* pvt)
 void CThread::Terminate()
 {
 #ifdef _WIN32
-	if(hThread)
+	if (hThread)
 		TerminateThread(hThread, 0);
 #else
 	pthread_kill(m_thread, SIGTERM);
@@ -78,7 +75,7 @@ void CThread::Terminate()
 void CThread::Kill()
 {
 #ifdef _WIN32
-	if(hThread)
+	if (hThread)
 		TerminateThread(hThread, 0);
 #else
 	pthread_kill(m_thread, SIGKILL);
@@ -88,7 +85,7 @@ void CThread::Kill()
 void CThread::Join()
 {
 #ifdef _WIN32
-	if(hThread)
+	if (hThread)
 		WaitForSingleObject(hThread, INFINITE);
 #else
 	pthread_join(m_thread, &m_ret);
@@ -204,26 +201,22 @@ void CThreadRecursiveMutex::Unlock()
 #endif
 }
 
-
 //===========================================
 //
 //      CThreadSemaphore
 //
 //===========================================
 
-CThreadSemaphore::CThreadSemaphore(const char* name, int max, bool shared) :
-	m_name(name),
-	m_max(max),
-	m_shared(shared)
+CThreadSemaphore::CThreadSemaphore(const char* name, int max, bool shared) : m_name(name), m_max(max), m_shared(shared)
 {
 #ifdef _WIN32
 	// NOTE: On windows, a semaphore's value is decreased by one each time it's obtained, and increased by a value each time it's released
-	if(shared)
+	if (shared)
 		m_sem = CreateSemaphoreExA(NULL, max, max, name, 0, 0);
 	else
 		m_sem = CreateSemaphoreA(NULL, max, max, name);
 #else
-	if(shared)
+	if (shared)
 		m_sem = sem_open(name, O_CREAT);
 	else
 	{
@@ -238,7 +231,7 @@ CThreadSemaphore::~CThreadSemaphore()
 #ifdef _WIN32
 	CloseHandle(m_sem);
 #else
-	if(m_shared)
+	if (m_shared)
 		sem_close(m_sem);
 	else
 		sem_destroy(m_sem);
@@ -273,42 +266,23 @@ bool CThreadSemaphore::TryLock()
 #endif
 }
 
-
 //===========================================
 //
 //      CThreadSpinSemaphore
 //
 //===========================================
 
-CThreadSpinSemaphore::CThreadSpinSemaphore(int max)
-{
+CThreadSpinSemaphore::CThreadSpinSemaphore(int max) {}
 
-}
+CThreadSpinSemaphore::~CThreadSpinSemaphore() {}
 
-CThreadSpinSemaphore::~CThreadSpinSemaphore()
-{
+void CThreadSpinSemaphore::Lock() {}
 
-}
+void CThreadSpinSemaphore::Unlock() {}
 
-void CThreadSpinSemaphore::Lock()
-{
+bool CThreadSpinSemaphore::TryLock() { return false; }
 
-}
-
-void CThreadSpinSemaphore::Unlock()
-{
-
-}
-
-bool CThreadSpinSemaphore::TryLock()
-{
-	return false;
-}
-
-int CThreadSpinSemaphore::GetUsers() const
-{
-	return 0;
-}
+int CThreadSpinSemaphore::GetUsers() const { return 0; }
 
 //===========================================
 //
@@ -390,29 +364,12 @@ void CThreadRWMutex::WUnlock()
 #endif
 }
 
-CSharedMutex::CSharedMutex(const char *name) :
-	m_sem(name, 1, true)
-{
+CSharedMutex::CSharedMutex(const char* name) : m_sem(name, 1, true) {}
 
-}
+CSharedMutex::~CSharedMutex() {}
 
-CSharedMutex::~CSharedMutex()
-{
+void CSharedMutex::Lock() { m_sem.Lock(); }
 
-}
+void CSharedMutex::Unlock() { m_sem.Unlock(); }
 
-void CSharedMutex::Lock()
-{
-	m_sem.Lock();
-}
-
-void CSharedMutex::Unlock()
-{
-	m_sem.Unlock();
-}
-
-bool CSharedMutex::TryLock()
-{
-	return m_sem.TryLock();
-}
-
+bool CSharedMutex::TryLock() { return m_sem.TryLock(); }

@@ -17,20 +17,11 @@ GNU General Public License for more details.
 #include "containers/buffer.h"
 #include "crtlib.h"
 
-void logger::Printf(const char *fmt, ...)
-{
+void logger::Printf(const char* fmt, ...) {}
 
-}
+void logger::Errorf(const char* fmt, ...) {}
 
-void logger::Errorf(const char *fmt, ...)
-{
-
-}
-
-void logger::Warnf(const char *fmt, ...)
-{
-
-}
+void logger::Warnf(const char* fmt, ...) {}
 
 struct LogGroupDesc_t
 {
@@ -48,18 +39,18 @@ Array<LogChannelDescription_t>& GlobalChannelList()
 {
 	static Array<LogChannelDescription_t> gChannels;
 	/* init channels list with the channels we need */
-	if(gChannels.empty())
+	if (gChannels.empty())
 	{
 		auto lock = GlobalLogMutex()->RAIILock();
 
 		LogChannelDescription_t generalDesc;
 		generalDesc.defaultColor = {255, 255, 255};
-		generalDesc.name = "General";
+		generalDesc.name	 = "General";
 		gChannels.push_back(generalDesc);
 
 		/* Add the default logging listener */
 		Log::DefaultLogBackend* backend = new Log::DefaultLogBackend(true);
-		backend->m_enabledForAll = true;
+		backend->m_enabledForAll	= true;
 		Log::RegisterBackend(backend);
 	}
 	return gChannels;
@@ -77,7 +68,6 @@ Array<LogGroup>& GlobalGroupList()
 	return gGroups;
 }
 
-
 static LogChannelDescription_t* GetChanDesc(LogChannel chan)
 {
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -86,69 +76,54 @@ static LogChannelDescription_t* GetChanDesc(LogChannel chan)
 	return &channels[chan];
 }
 
-static inline bool CheckChannelId(LogChannel chan)
-{
-	return (chan != Log::INVALID_CHANNEL_ID) && (chan < GlobalChannelList().size());
-}
+static inline bool CheckChannelId(LogChannel chan) { return (chan != Log::INVALID_CHANNEL_ID) && (chan < GlobalChannelList().size()); }
 
-static inline bool CheckGroupId(LogGroup grp)
-{
-	return (grp != Log::INVALID_GROUP_ID) && (grp < GlobalGroupList().size());
-}
+static inline bool CheckGroupId(LogGroup grp) { return (grp != Log::INVALID_GROUP_ID) && (grp < GlobalGroupList().size()); }
 
-static inline bool CheckBackendId(LogBackend b)
-{
-	return (b != Log::INVALID_BACKEND_ID) && (b < GlobalBackendList().size());
-}
+static inline bool CheckBackendId(LogBackend b) { return (b != Log::INVALID_BACKEND_ID) && (b < GlobalBackendList().size()); }
 
-const LogChannelDescription_t* Log::GetChannelDescription(LogChannel chan)
-{
-	return GetChanDesc(chan);
-}
+const LogChannelDescription_t* Log::GetChannelDescription(LogChannel chan) { return GetChanDesc(chan); }
 
 LogChannel Log::GetChannelByName(const char* name)
 {
 	auto lock = GlobalLogMutex()->RAIILock();
 
 	auto& channels = GlobalChannelList();
-	int i = 0;
-	for(auto it = channels.begin(); it != channels.end(); ++it, i++)
+	int   i	       = 0;
+	for (auto it = channels.begin(); it != channels.end(); ++it, i++)
 	{
-		if(it->name.equals(name))
+		if (it->name.equals(name))
 			return i;
 	}
 	return INVALID_CHANNEL_ID;
 }
 
-
 LogChannel Log::CreateChannel(const char* name, LogColor color)
 {
-	auto lock = GlobalLogMutex()->RAIILock();
+	auto  lock     = GlobalLogMutex()->RAIILock();
 	auto& channels = GlobalChannelList();
 
 	/* if already registered, just return the existing channel */
-	for(int i = 0; i < channels.size(); i++)
+	for (int i = 0; i < channels.size(); i++)
 	{
-		if(channels[i].name.equals(name))
+		if (channels[i].name.equals(name))
 			return i;
 	}
 
-
 	LogChannelDescription_t chan;
-	chan.name = name;
+	chan.name	  = name;
 	chan.defaultColor = color;
 
 	auto& backendlist = GlobalBackendList();
-	for(LogChannel c = 0; c < backendlist.size(); c++)
+	for (LogChannel c = 0; c < backendlist.size(); c++)
 	{
-		if(backendlist[c]->m_enabledForAll && !chan.backends.contains(c))
+		if (backendlist[c]->m_enabledForAll && !chan.backends.contains(c))
 			chan.backends.push_back(c);
 	}
 
 	channels.push_back(chan);
-	return channels.size()-1;
+	return channels.size() - 1;
 }
-
 
 LogBackend Log::RegisterBackend(ILogBackend* backend)
 {
@@ -157,12 +132,12 @@ LogBackend Log::RegisterBackend(ILogBackend* backend)
 	auto& backends = GlobalBackendList();
 
 	backends.push_back(backend);
-	return backends.size()-1;
+	return backends.size() - 1;
 }
 
 ILogBackend* Log::GetBackend(LogBackend backend)
 {
-	if(!CheckBackendId(backend))
+	if (!CheckBackendId(backend))
 		return nullptr;
 
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -178,7 +153,7 @@ void Log::ClearBackends()
 
 	GlobalBackendList().clear();
 
-	for(auto& chan : GlobalChannelList())
+	for (auto& chan : GlobalChannelList())
 	{
 		chan.backends.clear();
 	}
@@ -186,7 +161,7 @@ void Log::ClearBackends()
 
 void Log::DisableBackendForChannel(LogChannel chan, LogBackend backend)
 {
-	if(!CheckChannelId(chan) || !CheckBackendId(backend))
+	if (!CheckChannelId(chan) || !CheckBackendId(backend))
 		return;
 
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -197,7 +172,7 @@ void Log::DisableBackendForChannel(LogChannel chan, LogBackend backend)
 
 void Log::EnableBackendForChannel(LogChannel chan, LogBackend backend)
 {
-	if(!CheckChannelId(chan) || !CheckBackendId(backend))
+	if (!CheckChannelId(chan) || !CheckBackendId(backend))
 		return;
 
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -208,12 +183,12 @@ void Log::EnableBackendForChannel(LogChannel chan, LogBackend backend)
 
 void Log::DisableBackend(LogBackend backend)
 {
-	if(!CheckBackendId(backend))
+	if (!CheckBackendId(backend))
 		return;
 
 	auto lock = GlobalLogMutex()->RAIILock();
 
-	for(auto& c : GlobalChannelList())
+	for (auto& c : GlobalChannelList())
 	{
 		c.backends.remove(backend);
 	}
@@ -221,29 +196,29 @@ void Log::DisableBackend(LogBackend backend)
 
 void Log::EnableBackend(LogBackend backend)
 {
-	if(!CheckBackendId(backend))
+	if (!CheckBackendId(backend))
 		return;
 
 	auto lock = GlobalLogMutex()->RAIILock();
 
-	for(auto& c : GlobalChannelList())
+	for (auto& c : GlobalChannelList())
 	{
-		if(!c.backends.contains(backend))
+		if (!c.backends.contains(backend))
 			c.backends.push_back(backend);
 	}
 }
 
 static void LogInternal(LogChannel chan, LogChannelDescription_t* desc, ELogLevel level, LogColor color, const char* message)
 {
-	if(!desc)
+	if (!desc)
 		desc = GetChanDesc(chan);
 
 	/* Invoke all backends */
-	for(auto& backend : desc->backends)
+	for (auto& backend : desc->backends)
 	{
 		ILogBackend* b = GlobalBackendList()[backend];
 
-		if(!b)
+		if (!b)
 			continue;
 
 		b->Log(chan, level, color, message);
@@ -252,11 +227,11 @@ static void LogInternal(LogChannel chan, LogChannelDescription_t* desc, ELogLeve
 
 void Log::Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, ...)
 {
-	if(!CheckChannelId(chan) || !fmt)
+	if (!CheckChannelId(chan) || !fmt)
 		return;
 
 	thread_local static char buf[4096];
-	va_list list;
+	va_list			 list;
 	va_start(list, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, list);
 	va_end(list);
@@ -268,11 +243,11 @@ void Log::Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt,
 
 void Log::Log(LogChannel chan, ELogLevel level, const char* fmt, ...)
 {
-	if(!CheckChannelId(chan) || !fmt)
+	if (!CheckChannelId(chan) || !fmt)
 		return;
 
 	thread_local static char buf[4096];
-	va_list list;
+	va_list			 list;
 	va_start(list, fmt);
 	vsnprintf(buf, sizeof(buf), fmt, list);
 	va_end(list);
@@ -280,7 +255,7 @@ void Log::Log(LogChannel chan, ELogLevel level, const char* fmt, ...)
 	auto lock = GlobalLogMutex()->RAIILock();
 
 	auto desc = GetChanDesc(chan);
-	if(!desc)
+	if (!desc)
 		return;
 
 	LogInternal(chan, desc, level, desc->defaultColor, buf);
@@ -288,7 +263,7 @@ void Log::Log(LogChannel chan, ELogLevel level, const char* fmt, ...)
 
 void Log::Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, va_list list)
 {
-	if(!CheckChannelId(chan) || !fmt)
+	if (!CheckChannelId(chan) || !fmt)
 		return;
 
 	thread_local static char buf[4096];
@@ -301,7 +276,7 @@ void Log::Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt,
 
 void Log::Log(LogChannel chan, ELogLevel level, const char* fmt, va_list list)
 {
-	if(!CheckChannelId(chan) || !fmt)
+	if (!CheckChannelId(chan) || !fmt)
 		return;
 
 	thread_local static char buf[4096];
@@ -310,7 +285,7 @@ void Log::Log(LogChannel chan, ELogLevel level, const char* fmt, va_list list)
 	auto lock = GlobalLogMutex()->RAIILock();
 
 	auto desc = GetChanDesc(chan);
-	if(!desc)
+	if (!desc)
 		return;
 
 	LogInternal(chan, desc, level, desc->defaultColor, buf);
@@ -323,10 +298,9 @@ LogGroup Log::CreateGroup(const char* name)
 	return 0;
 }
 
-
 void Log::AddChannelToGroup(LogChannel chan, LogGroup group)
 {
-	if(!CheckChannelId(chan) || !CheckGroupId(group))
+	if (!CheckChannelId(chan) || !CheckGroupId(group))
 		return;
 
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -337,7 +311,7 @@ void Log::AddChannelToGroup(LogChannel chan, LogGroup group)
 
 void Log::RemoveChannelFromGroup(LogChannel chan, LogGroup group)
 {
-	if(!CheckChannelId(chan) || !CheckGroupId(group))
+	if (!CheckChannelId(chan) || !CheckGroupId(group))
 		return;
 
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -348,7 +322,7 @@ void Log::RemoveChannelFromGroup(LogChannel chan, LogGroup group)
 
 bool Log::IsChannelInGroup(LogChannel chan, LogGroup group)
 {
-	if(!CheckChannelId(chan) || !CheckGroupId(group))
+	if (!CheckChannelId(chan) || !CheckGroupId(group))
 		return false;
 
 	auto lock = GlobalLogMutex()->RAIILock();
@@ -360,7 +334,7 @@ bool Log::IsChannelInGroup(LogChannel chan, LogGroup group)
 
 int Log::NumChannelsInGroup(LogGroup grp)
 {
-	if(!CheckGroupId(grp))
+	if (!CheckGroupId(grp))
 		return 0;
 	return 0;
 }
@@ -375,13 +349,13 @@ Log::DefaultLogBackend::DefaultLogBackend(bool colorized)
 {
 #ifdef _POSIX
 	m_colorized = false;
-	char* e = getenv("COLORTERMINAL");
-	if(e && strcmp(e, "truecolor") == 0)
+	char* e	    = getenv("COLORTERMINAL");
+	if (e && strcmp(e, "truecolor") == 0)
 	{
 		m_colorized = colorized;
 	}
 	e = getenv("TERM");
-	if(e && strcmp(e, "xterm-256color") == 0)
+	if (e && strcmp(e, "xterm-256color") == 0)
 	{
 		m_colorized = colorized;
 	}
@@ -391,9 +365,9 @@ Log::DefaultLogBackend::DefaultLogBackend(bool colorized)
 void Log::DefaultLogBackend::Log(LogChannel chan, ELogLevel lvl, LogColor color, const char* msg)
 {
 	this->SetStreamColor(color.r, color.g, color.b);
-	if(m_colorized && (lvl == ELogLevel::MSG_ERROR || lvl == ELogLevel::MSG_FATAL))
+	if (m_colorized && (lvl == ELogLevel::MSG_ERROR || lvl == ELogLevel::MSG_FATAL))
 		SetStreamBold();
-	if(m_colorized)
+	if (m_colorized)
 		Q_fmtcolorstr_stream(stdout, msg);
 	else
 		fputs(msg, stdout);
@@ -403,7 +377,7 @@ void Log::DefaultLogBackend::Log(LogChannel chan, ELogLevel lvl, LogColor color,
 void Log::DefaultLogBackend::SetStreamColor(unsigned char r, unsigned char g, unsigned char b)
 {
 #ifdef _POSIX
-	if(m_colorized)
+	if (m_colorized)
 	{
 		fprintf(stderr, "\x1b[38;2;%u;%u;%um", r, g, b);
 		fprintf(stdout, "\x1b[38;2;%u;%u;%um", r, g, b);
@@ -414,7 +388,7 @@ void Log::DefaultLogBackend::SetStreamColor(unsigned char r, unsigned char g, un
 void Log::DefaultLogBackend::SetStreamBold()
 {
 #ifdef _POSIX
-	if(m_colorized)
+	if (m_colorized)
 	{
 		fprintf(stderr, "\x1b[1m\n");
 		fprintf(stdout, "\x1b[1m\n");
@@ -425,7 +399,7 @@ void Log::DefaultLogBackend::SetStreamBold()
 void Log::DefaultLogBackend::ResetStreamColor()
 {
 #ifdef _POSIX
-	if(m_colorized)
+	if (m_colorized)
 	{
 		fprintf(stdout, "\x1b[0m");
 		fprintf(stderr, "\x1b[0m");
@@ -442,18 +416,18 @@ void Log::DefaultLogBackend::ResetStreamColor()
 Log::StdFileLogBackend::StdFileLogBackend(const char* path)
 {
 	m_stream = fopen(path, "w");
-	m_path = path;
+	m_path	 = path;
 }
 
 Log::StdFileLogBackend::~StdFileLogBackend()
 {
-	if(m_stream)
+	if (m_stream)
 		fclose(m_stream);
 }
 
 void Log::StdFileLogBackend::Log(LogChannel chan, ELogLevel lvl, LogColor color, const char* msg)
 {
-	if(!m_stream)
+	if (!m_stream)
 		return;
 	fputs(msg, m_stream);
 }

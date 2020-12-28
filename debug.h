@@ -18,7 +18,9 @@ GNU General Public License for more details.
 #include "containers/array.h"
 #include "public.h"
 
-#define BEGIN_DBG_NAMESPACE namespace dbg {
+#define BEGIN_DBG_NAMESPACE                                                                                                                          \
+	namespace dbg                                                                                                                                \
+	{
 #define END_DBG_NAMESPACE }
 
 BEGIN_DBG_NAMESPACE
@@ -28,21 +30,21 @@ EXPORT void Init();
 class EXPORT CAssert
 {
 public:
-	int m_line;
+	int	    m_line;
 	const char* m_file;
 	const char* m_exp;
-	bool m_ignored : 1;
-	bool m_break : 1;
-	bool m_assertOnce : 1;
-	int m_timesHit;
+	bool	    m_ignored : 1;
+	bool	    m_break : 1;
+	bool	    m_assertOnce : 1;
+	int	    m_timesHit;
 
 public:
 	CAssert(int line, const char* file, const char* exp);
 	~CAssert();
 
-	bool Enabled() const { return !m_ignored; }
+	bool	    Enabled() const { return !m_ignored; }
 	const char* File() const { return m_file; }
-	int Line() const { return m_line; }
+	int	    Line() const { return m_line; }
 };
 
 /* Called to fire an assertion. Returns true if the assertion is enabled and a message should be printed */

@@ -19,8 +19,6 @@ GNU General Public License for more details.
 #undef max
 #include <vector>
 
-template<class T> 
-class Array : public std::vector<T>
+template <class T> class Array : public std::vector<T>
 {
-
 };

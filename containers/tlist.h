@@ -13,7 +13,7 @@ GNU General Public License for more details.
 */
 #pragma once
 
-#include "allocator.h" 
+#include "allocator.h"
 #include "../threadtools.h"
 
 /* Standard includes */
@@ -21,10 +21,8 @@ GNU General Public License for more details.
 #undef max
 
 /* Singly linked thread-safe list */
-template<class T, class A = DefaultAllocator<T>>
-class TSList
+template <class T, class A = DefaultAllocator<T>> class TSList
 {
 private:
-
 public:
 };

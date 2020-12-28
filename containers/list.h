@@ -20,23 +20,22 @@ GNU General Public License for more details.
 #undef max
 #include <list>
 
-template<class T, class A = std::allocator<T>>
-class List : public std::list<T, A>
+template <class T, class A = std::allocator<T>> class List : public std::list<T, A>
 {
 public:
-
 	bool contains(const T& item)
 	{
-		for(auto x : *this)
-			if(item == x) return true;
+		for (auto x : *this)
+			if (item == x)
+				return true;
 		return false;
 	}
 
 	void remove(const T& item)
 	{
-		for(auto it = this->begin(); it != this->end(); ++it)
+		for (auto it = this->begin(); it != this->end(); ++it)
 		{
-			if(*it == item)
+			if (*it == item)
 			{
 				this->erase(it);
 				return;

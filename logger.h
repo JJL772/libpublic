@@ -22,20 +22,20 @@ GNU General Public License for more details.
 #include "containers/string.h"
 
 #define COLOR_NORMAL "^1"
-#define COLOR_RED "^2"
-#define COLOR_GREEN "^3"
-#define COLOR_BLUE "^4"
+#define COLOR_RED    "^2"
+#define COLOR_GREEN  "^3"
+#define COLOR_BLUE   "^4"
 #define COLOR_PURPLE "^5"
 #define COLOR_YELLOW "^6"
-#define COLOR_BOLD "^7"
+#define COLOR_BOLD   "^7"
 #define COLOR_STRIKE "^8"
 
 namespace logger
 {
-	EXPORT void Printf(const char* fmt, ...);
-	EXPORT void Errorf(const char* fmt, ...);
-	EXPORT void Warnf(const char* fmt, ...);
-}
+EXPORT void Printf(const char* fmt, ...);
+EXPORT void Errorf(const char* fmt, ...);
+EXPORT void Warnf(const char* fmt, ...);
+} // namespace logger
 
 struct LogColor
 {
@@ -45,7 +45,7 @@ struct LogColor
 };
 
 using LogChannel = unsigned int;
-using LogGroup = unsigned int;
+using LogGroup	 = unsigned int;
 using LogBackend = unsigned int;
 
 enum class ELogLevel
@@ -59,9 +59,9 @@ enum class ELogLevel
 
 struct LogChannelDescription_t
 {
-	String name;
-	LogColor defaultColor;
-	List<LogGroup> groups;
+	String		 name;
+	LogColor	 defaultColor;
+	List<LogGroup>	 groups;
 	List<LogBackend> backends;
 };
 
@@ -75,76 +75,76 @@ public:
 
 namespace Log
 {
-	static constexpr LogChannel INVALID_CHANNEL_ID = -1u;
-	static constexpr LogGroup INVALID_GROUP_ID = -1u;
-	static constexpr LogBackend INVALID_BACKEND_ID = -1u;
+static constexpr LogChannel INVALID_CHANNEL_ID = -1u;
+static constexpr LogGroup   INVALID_GROUP_ID   = -1u;
+static constexpr LogBackend INVALID_BACKEND_ID = -1u;
 
-	static constexpr LogChannel GENERAL_CHANNEL_ID = 0;
+static constexpr LogChannel GENERAL_CHANNEL_ID = 0;
 
-	/**
-	 * Returns the description for a specific logging channel
-	 * @param chan
-	 * @return
-	 */
-	const LogChannelDescription_t* GetChannelDescription(LogChannel chan);
+/**
+ * Returns the description for a specific logging channel
+ * @param chan
+ * @return
+ */
+const LogChannelDescription_t* GetChannelDescription(LogChannel chan);
 
-	LogChannel GetChannelByName(const char* name);
+LogChannel GetChannelByName(const char* name);
 
-	LogChannel CreateChannel(const char* name, LogColor color);
+LogChannel CreateChannel(const char* name, LogColor color);
 
-	LogBackend RegisterBackend(ILogBackend* backend);
-	ILogBackend* GetBackend(LogBackend backend);
-	void ClearBackends();
+LogBackend   RegisterBackend(ILogBackend* backend);
+ILogBackend* GetBackend(LogBackend backend);
+void	     ClearBackends();
 
-	void DisableBackendForChannel(LogChannel chan, LogBackend backend);
-	void EnableBackendForChannel(LogChannel chan, LogBackend backend);
-	void DisableBackend(LogBackend backend);
-	void EnableBackend(LogBackend backend);
+void DisableBackendForChannel(LogChannel chan, LogBackend backend);
+void EnableBackendForChannel(LogChannel chan, LogBackend backend);
+void DisableBackend(LogBackend backend);
+void EnableBackend(LogBackend backend);
 
-	void Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, ...);
-	void Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, va_list list);
-	void Log(LogChannel chan, ELogLevel level, const char* fmt, ...);
-	void Log(LogChannel chan, ELogLevel level, const char* fmt, va_list list);
+void Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, ...);
+void Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, va_list list);
+void Log(LogChannel chan, ELogLevel level, const char* fmt, ...);
+void Log(LogChannel chan, ELogLevel level, const char* fmt, va_list list);
 
-	/* Log channel groups */
-	LogGroup CreateGroup(const char* name);
-	void AddChannelToGroup(LogChannel chan, LogGroup group);
-	void RemoveChannelFromGroup(LogChannel chan, LogGroup group);
-	bool IsChannelInGroup(LogChannel chan, LogGroup group);
-	int NumChannelsInGroup(LogGroup grp);
+/* Log channel groups */
+LogGroup CreateGroup(const char* name);
+void	 AddChannelToGroup(LogChannel chan, LogGroup group);
+void	 RemoveChannelFromGroup(LogChannel chan, LogGroup group);
+bool	 IsChannelInGroup(LogChannel chan, LogGroup group);
+int	 NumChannelsInGroup(LogGroup grp);
 
-	/**
-	 * Basic logging backend, supports colors
-	 */
-	class DefaultLogBackend : public ILogBackend
-	{
-	private:
-		bool m_colorized = false;
+/**
+ * Basic logging backend, supports colors
+ */
+class DefaultLogBackend : public ILogBackend
+{
+private:
+	bool m_colorized = false;
 
-	protected:
-		void SetStreamColor(unsigned char r, unsigned char g, unsigned char b);
-		void ResetStreamColor();
-		void SetStreamBold();
+protected:
+	void SetStreamColor(unsigned char r, unsigned char g, unsigned char b);
+	void ResetStreamColor();
+	void SetStreamBold();
 
-	public:
-		explicit DefaultLogBackend(bool colorized = true);
+public:
+	explicit DefaultLogBackend(bool colorized = true);
 
-		void Log(LogChannel chan, ELogLevel lvl, LogColor color, const char* msg) override;
-	};
+	void Log(LogChannel chan, ELogLevel lvl, LogColor color, const char* msg) override;
+};
 
-	/**
-	 * File log backend using STDIO functions
-	 */
-	class StdFileLogBackend : public ILogBackend
-	{
-	private:
-		const char* m_path;
-		FILE* m_stream;
+/**
+ * File log backend using STDIO functions
+ */
+class StdFileLogBackend : public ILogBackend
+{
+private:
+	const char* m_path;
+	FILE*	    m_stream;
 
-	public:
-		explicit StdFileLogBackend(const char* path);
-		~StdFileLogBackend();
+public:
+	explicit StdFileLogBackend(const char* path);
+	~StdFileLogBackend();
 
-		void Log(LogChannel chan, ELogLevel lvl, LogColor color, const char* msg) override;
-	};
-}
+	void Log(LogChannel chan, ELogLevel lvl, LogColor color, const char* msg) override;
+};
+} // namespace Log

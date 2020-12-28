@@ -23,10 +23,11 @@ class EXPORT StringView;
 class EXPORT String
 {
 private:
-	char* m_string;
+	char*		   m_string;
 	unsigned long long m_length;
 
 	friend class StringView;
+
 public:
 	String();
 	String(const String& other);
@@ -66,19 +67,19 @@ public:
 	size_t find_first_of(char c) const;
 	size_t find_last_of(char c) const;
 
-	void to_lower();
-	void to_upper();
+	void   to_lower();
+	void   to_upper();
 	size_t replace(char c, char n, size_t max = 0);
 
 	String substr(size_t start, size_t end);
 
-	operator const char*() const { return m_string; };
+		 operator const char*() const { return m_string; };
 	explicit operator char*() { return m_string; };
-	char operator[](size_t i) const;
-	String& operator=(const String& other);
-	String& operator=(String&& other);
-	String& operator=(const char* other);
-	String& operator=(const StringView& other);
+	char	 operator[](size_t i) const;
+	String&	 operator=(const String& other);
+	String&	 operator=(String&& other);
+	String&	 operator=(const char* other);
+	String&	 operator=(const StringView& other);
 
 	bool operator==(const String& other) const;
 	bool operator==(const char* other) const;
@@ -97,10 +98,11 @@ public:
 class StringView
 {
 private:
-	const char* m_string;
+	const char*	   m_string;
 	unsigned long long m_length;
 
 	friend class String;
+
 public:
 	StringView(const StringView& other);
 	StringView(const StringView&& other) noexcept;

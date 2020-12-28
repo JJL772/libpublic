@@ -37,35 +37,34 @@ public:
 			BOOL,
 		} cached;
 
-		union {
+		union
+		{
 			long int ival;
-			double fval;
-			bool bval;
+			double	 fval;
+			bool	 bval;
 		} cachedv;
 
-                bool quoted;
-                friend class KeyValues;
+		bool quoted;
+		friend class KeyValues;
 
 	public:
-
 		key_t() { cached = ELastCached::NONE; };
 
-		inline bool ReadBool(bool &ok);
-		inline long int ReadInt(bool &ok);
-		inline double ReadFloat(bool &ok);
+		inline bool	ReadBool(bool& ok);
+		inline long int ReadInt(bool& ok);
+		inline double	ReadFloat(bool& ok);
 
 		const char* Name() const { return key; };
 		const char* Value() const { return value; };
-		bool Quoted() const { return quoted; };
-
+		bool	    Quoted() const { return quoted; };
 	};
 
 private:
 	char* name;
-	bool good;
-        bool quoted;
-public:
+	bool  good;
+	bool  quoted;
 
+public:
 	KeyValues(const KeyValues& kv);
 	KeyValues(KeyValues&& kv);
 	explicit KeyValues(const char* name);
@@ -77,42 +76,42 @@ public:
 	KeyValues& operator=(KeyValues&& kv);
 
 	/* Getters */
-	bool 		GetBool(const char* key, bool _default = false);
-	int 		GetInt(const char* key, int _default = -1);
-	float 		GetFloat(const char* key, float _default = 0.0f);
-	const char*     GetString(const char* key, const char* _default = nullptr);
-	double 		GetDouble(const char* key, double _default = 0.0);
-	KeyValues*      GetChild(const char* name);
+	bool	    GetBool(const char* key, bool _default = false);
+	int	    GetInt(const char* key, int _default = -1);
+	float	    GetFloat(const char* key, float _default = 0.0f);
+	const char* GetString(const char* key, const char* _default = nullptr);
+	double	    GetDouble(const char* key, double _default = 0.0);
+	KeyValues*  GetChild(const char* name);
 
-	bool 		HasKey(const char* key);
+	bool HasKey(const char* key);
 
 	/* Setters */
-	void 		SetBool(const char* key, bool v);
-	void 		SetInt(const char* key, int v);
-	void 		SetFloat(const char* key, float v);
-	void 		SetString(const char* key, const char* v);
+	void SetBool(const char* key, bool v);
+	void SetInt(const char* key, int v);
+	void SetFloat(const char* key, float v);
+	void SetString(const char* key, const char* v);
 
 	/* Parse from a file */
-	void 		ParseFile(const char* file, bool use_escape_codes = false);
-	void		ParseFile(FILE* f, bool use_escape_codes = false);
-	void 		ParseString(const char* string, bool use_escape_codes = false, long long len = -1);
+	void ParseFile(const char* file, bool use_escape_codes = false);
+	void ParseFile(FILE* f, bool use_escape_codes = false);
+	void ParseString(const char* string, bool use_escape_codes = false, long long len = -1);
 
 	const std::vector<key_t>& Keys() const { return keys; };
-	const char* Name() const { return name; };
-	bool Quoted() const { return quoted; };
+	const char*		  Name() const { return name; };
+	bool			  Quoted() const { return quoted; };
 
 	/* Clears a key's value setting it to "" */
-	void 		ClearKey(const char* key);
+	void ClearKey(const char* key);
 
 	/* Completely removes a key */
-	void 		RemoveKey(const char* key);
+	void RemoveKey(const char* key);
 
 	/* Dumps this to stdout */
-	void 		DumpToStream(FILE* fs);
-	void 		DumpToStreamInternal(FILE* fs, int indent);
+	void DumpToStream(FILE* fs);
+	void DumpToStreamInternal(FILE* fs, int indent);
 
 	/* Set Good bit is set if parsing went OK */
-	bool        IsGood() const { return this->good; };
+	bool IsGood() const { return this->good; };
 
 	enum class EError
 	{
@@ -124,7 +123,7 @@ public:
 		UNTERMINATED_SECTION,
 	};
 
-	typedef void(*pfnErrorCallback_t)(int,int,EError);
+	typedef void (*pfnErrorCallback_t)(int, int, EError);
 
 	/* Sets the error reporting callback */
 	void SetErrorCallback(pfnErrorCallback_t callback);
@@ -134,7 +133,8 @@ public:
 
 	/* Array of keys */
 	std::vector<key_t> keys;
+
 private:
-	void ReportError(int line, int _char, EError err);
+	void		   ReportError(int line, int _char, EError err);
 	pfnErrorCallback_t pCallback;
 };
