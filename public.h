@@ -82,11 +82,11 @@ static bool ColorIndex(char c) { return (c - '0') & 7; };
 #endif
 #ifdef _WIN32
 #ifdef _MSC_VER
-#define IMPORT __declspec(dllimport)
+#define DLLIMPORT __declspec(dllimport)
 #else
-#define IMPORT __attribute__((dllimport))
+#define DLLIMPORT __attribute__((dllimport))
 #endif
 #else
-#define IMPORT
+#define DLLIMPORT
 #endif
 #endif // PUBLIC_STANDALINE
