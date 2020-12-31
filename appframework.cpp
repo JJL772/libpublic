@@ -15,6 +15,7 @@ GNU General Public License for more details.
 #include "appframework.h"
 
 #include <list>
+#include <string>
 
 #include "crtlib.h"
 
@@ -30,7 +31,7 @@ struct appsys_t
 
 struct mod_t
 {
-	const char*	   filename;
+	std::string	   filename;
 	void*		   handle;
 	pfnCreateInterface pCreateInterface;
 	pfnGetInterfaces   pGetInterfaces;
@@ -55,7 +56,7 @@ std::function<void*(const char*)> g_load_library = [](const char* lib) -> void* 
 #ifdef _WIN32
 	return LoadLibraryA(lib);
 #else
-	return dlopen(lib, RTLD_LAZY);
+	return dlopen(lib, RTLD_NOW);
 #endif
 };
 std::function<void(void*)> g_free_library = [](void* lib) -> void {
@@ -94,7 +95,7 @@ bool AppFramework::AddInterface(const char* module, const char* iface)
 	/* Load the lib */
 	for (auto mod : g_loadedmods)
 	{
-		if (mod->filename && Q_strcmp(mod->filename, module) == 0)
+		if (!mod->filename.empty() && Q_strcmp(mod->filename.c_str(), module) == 0)
 		{
 			_module = mod;
 			break;
@@ -202,7 +203,7 @@ bool AppFramework::LoadInterfaces()
 			{
 				Q_snprintf(g_last_error, sizeof(g_last_error),
 					   "Failed to call CreateInterface on interface %s (parent is %s) from module %s", appsys.name, appsys.parent,
-					   appsys.module->filename);
+					   appsys.module->filename.c_str());
 				return false;
 			}
 
