@@ -14,11 +14,14 @@ GNU General Public License for more details.
 */
 #include "globalproperties.h"
 
-bool IsDedicatedServer()
+bool gProperties[EGlobalProperty::PROPERTY_COUNT];
+
+bool GetProperty(EGlobalProperty prop)
 {
-#ifdef XASH_DEDICATED
-	return true;
-#else
-	return false;
-#endif
+	return gProperties[prop];
+}
+
+void SetProperty(EGlobalProperty prop, bool value)
+{
+	gProperties[prop] = value;
 }

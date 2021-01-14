@@ -14,6 +14,22 @@ GNU General Public License for more details.
 */
 #pragma once
 
-/* These are defined as function such that conditionally compiled code can be avoided */
-/* This way, we can ship one set of binaries for the game & dedicated server */
-bool IsDedicatedServer();
+/* List of global properties that any binary should be able to query */
+/* The idea here is to nuke the XASH_DEDICATED ifdefs, and the best way to do this is to */
+/* provide a global property handler to use in stupid if statements */
+/* All of the XASH_DEDICATED protected code builds outside of the switch- we're not dealing */
+/* with platform-specific code as much as we're dealing with domain-specific *behaviour* */
+/* At worst this will result in some branch mis-predictions, but branch prediction is pretty good these days */
+
+enum EGlobalProperty
+{
+	PROPERTY_DEDICATED_SERVER,
+	PROPERTY_PREFER_LOW_MEMORY,
+	PROPERTY_RESERVED0,
+	PROPERTY_RESERVED1,
+	PROPERTY_LAST = PROPERTY_RESERVED1,
+	PROPERTY_COUNT
+};
+
+bool GetProperty(EGlobalProperty prop);
+void SetProperty(EGlobalProperty prop, bool value);
