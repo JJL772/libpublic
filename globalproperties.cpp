@@ -16,12 +16,12 @@ GNU General Public License for more details.
 
 bool gProperties[EGlobalProperty::PROPERTY_COUNT];
 
-bool GetProperty(EGlobalProperty prop)
+bool GetGlobalProperty(EGlobalProperty prop)
 {
 	return gProperties[prop];
 }
 
-void SetProperty(EGlobalProperty prop, bool value)
+void SetGlobalProperty(EGlobalProperty prop, bool value)
 {
 	gProperties[prop] = value;
 }

@@ -31,5 +31,5 @@ enum EGlobalProperty
 	PROPERTY_COUNT
 };
 
-bool GetProperty(EGlobalProperty prop);
-void SetProperty(EGlobalProperty prop, bool value);
+bool GetGlobalProperty(EGlobalProperty prop);
+void SetGlobalProperty(EGlobalProperty prop, bool value);
