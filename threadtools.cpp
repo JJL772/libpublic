@@ -364,6 +364,11 @@ void CThreadRWMutex::WUnlock()
 #endif
 }
 
+//===========================================
+//
+//      CSharedMutex
+//
+//===========================================
 CSharedMutex::CSharedMutex(const char* name) : m_sem(name, 1, true) {}
 
 CSharedMutex::~CSharedMutex() {}
@@ -373,3 +378,70 @@ void CSharedMutex::Lock() { m_sem.Lock(); }
 void CSharedMutex::Unlock() { m_sem.Unlock(); }
 
 bool CSharedMutex::TryLock() { return m_sem.TryLock(); }
+
+//===========================================
+//
+//      CConditionVariable
+//
+//===========================================
+
+CThreadConditionVariable::CThreadConditionVariable()
+{
+#ifdef _WIN32
+	InitializeCriticalSection(&m_critSection);
+	InitializeConditionVariable(&m_condVar);
+#else
+	pthread_condattr_init(&m_attr);
+	pthread_cond_init(&m_cond, &m_attr);
+	pthread_mutexattr_init(&m_mutAttr);
+	pthread_mutex_init(&m_mut, &m_mutAttr);
+#endif
+}
+
+CThreadConditionVariable::~CThreadConditionVariable()
+{
+#ifdef _WIN32
+	DeleteCriticalSection(&m_critSection);
+	DeleteConditionVariable(&m_condVar);
+#else
+	pthread_cond_destroy(&m_cond);
+	pthread_condattr_destroy(&m_attr);
+	pthread_mutex_destroy(&m_mut);
+	pthread_mutexattr_destroy(&m_mutAttr);
+#endif
+}
+
+void CThreadConditionVariable::Wait(int max_time_ms)
+{
+#ifdef _WIN32
+	EnterCriticalSection(&m_critSection);
+	DWORD time = max_time_ms;
+	if(max_time_ms == -1)
+		time = INFINITE;
+	SleepConditionVariableCS(&m_condVar, &m_critSection, time);
+	LeaveCriticalSection(&m_critSection);
+#else
+	timespec timeSpec;
+	timeSpec.tv_sec = (max_time_ms / 1000);
+	timeSpec.tv_nsec = (max_time_ms * 1000000) - (timeSpec.tv_nsec * 1000000000);
+	pthread_cond_timedwait(&m_cond, &m_mut, &timeSpec);
+#endif
+}
+
+void CThreadConditionVariable::SignalOne()
+{
+#ifdef _WIN32
+	WakeConditionVariable(&m_convVar);
+#else
+	pthread_cond_signal(&m_cond);
+#endif
+}
+
+void CThreadConditionVariable::SignalAll()
+{
+#ifdef _WIN32
+	WakeAllConditionVariable(&m_condVar);
+#else
+	pthread_cond_broadcast(&m_cond);
+#endif
+}

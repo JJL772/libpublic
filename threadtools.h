@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #endif
 
 #include <atomic>
+#include <condition_variable>
 
 #include "public.h"
 #include "debug.h"
@@ -351,6 +352,39 @@ public:
 	void Unlock();
 	bool TryLock();
 	int  GetUsers() const;
+};
+
+class EXPORT CThreadConditionVariable
+{
+private:
+#ifdef _WIN32
+	CRITICAL_SECTION m_critSection;
+	CONDITION_VARIABLE m_condVar;
+#else
+	pthread_cond_t m_cond;
+	pthread_condattr_t m_attr;
+	pthread_mutex_t m_mut;
+	pthread_mutexattr_t m_mutAttr;
+#endif
+public:
+	CThreadConditionVariable();
+	~CThreadConditionVariable();
+
+	/**
+	 * Waits on the condition variable
+	 * @param max_time_ms Max time in ms to wait. -1 for infinite
+	 */
+	void Wait(int max_time_ms = -1);
+
+	/**
+	 * Signal a single waiting thread
+	 */
+	void SignalOne();
+
+	/**
+	 * Signal all waiting threads
+	 */
+	void SignalAll();
 };
 
 template <class T> class EXPORT CInterlockedAccessor;
