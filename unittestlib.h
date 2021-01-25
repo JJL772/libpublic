@@ -177,6 +177,39 @@ public:
 		}
 		this->EndTimed();
 	}
+
+	/**
+	 * Performs a timed-iterative test on a function. Averages the test time and computes maxs and mins and submits the
+	 * results to a test buffer
+	 * @param prefunc Function to execute right before the real one
+	 * @param func The function to execute
+	 * @param num_iterations Number of iterations to incur
+	 * @param name Name of the iterative test
+	 */
+	template<class T>
+	void IteratedTest(std::function<T(void)> prefunc, std::function<void(T)> func, unsigned int num_iterations, const std::string& name)
+	{
+		if(num_iterations == 0)
+			return;
+
+		this->BeginTimed(name);
+		for(unsigned int i = 0; i < num_iterations; i++)
+		{
+			T a = prefunc();
+			auto t0 = HighResClockT::now();
+			func(a);
+			auto t1 = HighResClockT ::now();
+			TimedTest_t& test = m_testStack.top();
+
+			auto dt = t1.time_since_epoch() - t0.time_since_epoch();
+			test.m_avgTime = (test.m_iterations * test.m_avgTime + dt.count()) / (test.m_iterations+1);
+			test.m_iterations++;
+
+			test.m_minTime = std::min(test.m_minTime, (TimeT)dt.count());
+			test.m_maxTime = std::max(test.m_maxTime, (TimeT)dt.count());
+		}
+		this->EndTimed();
+	}
 };
 
 class CUnitTestSuite
