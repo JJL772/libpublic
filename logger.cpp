@@ -339,6 +339,71 @@ int Log::NumChannelsInGroup(LogGroup grp)
 	return 0;
 }
 
+void Log::Msg(LogChannel chan, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	auto desc = GetChanDesc(chan);
+	if(desc)
+		LogInternal(chan, nullptr, ELogLevel::MSG_GENERAL, desc->defaultColor, buf);
+}
+
+void Log::Msg(LogChannel chan, LogColor color, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	LogInternal(chan, nullptr, ELogLevel::MSG_GENERAL, color, buf);
+}
+
+void Log::Warn(LogChannel chan, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	auto desc = GetChanDesc(chan);
+	if(desc)
+		LogInternal(chan, nullptr, ELogLevel::MSG_WARN, desc->defaultColor, buf);
+}
+
+void Log::Warn(LogChannel chan, LogColor color, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	LogInternal(chan, nullptr, ELogLevel::MSG_WARN, color, buf);
+}
+
+
 //===========================================================================//
 //
 // DEFAULT LOG BACKEND

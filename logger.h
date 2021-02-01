@@ -106,6 +106,11 @@ void Log(LogChannel chan, ELogLevel level, LogColor color, const char* fmt, va_l
 void Log(LogChannel chan, ELogLevel level, const char* fmt, ...);
 void Log(LogChannel chan, ELogLevel level, const char* fmt, va_list list);
 
+void Msg(LogChannel chan, const char* fmt, ...);
+void Msg(LogChannel chan, LogColor color, const char* fmt, ...);
+void Warn(LogChannel chan, const char* fmt, ...);
+void Warn(LogChannel chan, LogColor color, const char* fmt, ...);
+
 /* Log channel groups */
 LogGroup CreateGroup(const char* name);
 void	 AddChannelToGroup(LogChannel chan, LogGroup group);
