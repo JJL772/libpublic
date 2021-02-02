@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include "threadtools.h"
 #include "containers/buffer.h"
 #include "crtlib.h"
+#include "globalproperties.h"
 
 struct LogGroupDesc_t
 {
@@ -399,6 +400,8 @@ void Log::Warn(LogChannel chan, LogColor color, const char* fmt, ...)
 
 void Log::DevMsg(LogChannel chan, const char* fmt, ...)
 {
+	if(!GetGlobalProperty(EGlobalProperty::PROPERTY_DEV))
+		return;
 	if (!CheckChannelId(chan) || !fmt)
 		return;
 
@@ -416,6 +419,8 @@ void Log::DevMsg(LogChannel chan, const char* fmt, ...)
 
 void Log::DevMsg(LogChannel chan, LogColor color, const char* fmt, ...)
 {
+	if(!GetGlobalProperty(EGlobalProperty::PROPERTY_DEV))
+		return;
 	if (!CheckChannelId(chan) || !fmt)
 		return;
 
@@ -431,6 +436,8 @@ void Log::DevMsg(LogChannel chan, LogColor color, const char* fmt, ...)
 
 void Log::DevWarn(LogChannel chan, const char* fmt, ...)
 {
+	if(!GetGlobalProperty(EGlobalProperty::PROPERTY_DEV))
+		return;
 	if (!CheckChannelId(chan) || !fmt)
 		return;
 
@@ -448,6 +455,8 @@ void Log::DevWarn(LogChannel chan, const char* fmt, ...)
 
 void Log::DevWarn(LogChannel chan, LogColor color, const char* fmt, ...)
 {
+	if(!GetGlobalProperty(EGlobalProperty::PROPERTY_DEV))
+		return;
 	if (!CheckChannelId(chan) || !fmt)
 		return;
 
