@@ -48,8 +48,11 @@ String::String(String&& other)
 	other.m_length = 0;
 }
 
-String::String(const char* str)
+String::String(const char* str) :
+	String()
 {
+	if(!str)
+		return;
 	this->m_length = strlen(str);
 	this->m_string = Q_strdup(str);
 }
