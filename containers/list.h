@@ -19,10 +19,24 @@ GNU General Public License for more details.
 #undef min
 #undef max
 #include <list>
+#include <initializer_list>
 
 template <class T, class A = std::allocator<T>> class List : public std::list<T, A>
 {
 public:
+	List(std::initializer_list<T> ls) :
+		std::list<T,A>(ls)
+	{
+
+	}
+
+	List(const T* p, size_t n)
+	{
+		for(size_t i = 0; i < n; i++) {
+			push_back(p[i]);
+		}
+	}
+
 	bool contains(const T& item)
 	{
 		for (auto x : *this)
@@ -31,15 +45,17 @@ public:
 		return false;
 	}
 
-	void remove(const T& item)
+	void concat(const List<T,A>& other)
 	{
-		for (auto it = this->begin(); it != this->end(); ++it)
-		{
-			if (*it == item)
-			{
-				this->erase(it);
-				return;
-			}
+		for(const auto& x : *this) {
+			push_back(x);
 		}
 	}
+
+	List<T,A>& operator+=(const List<T,A>& o)
+	{
+		concat(o);
+		return *this;
+	}
+
 };

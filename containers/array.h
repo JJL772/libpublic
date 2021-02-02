@@ -18,7 +18,52 @@ GNU General Public License for more details.
 #undef min
 #undef max
 #include <vector>
+#include <initializer_list>
 
 template <class T> class Array : public std::vector<T>
 {
+public:
+	Array(std::initializer_list<T> ls) :
+		std::vector<T>(ls)
+	{
+	}
+
+	Array(const T* p, size_t n)
+	{
+		for(size_t i = 0; i < n; i++) {
+			this->push_back(p[i]);
+		}
+	}
+
+	void remove(const T& t, size_t max = 1)
+	{
+		for(auto it = this->begin(); it != this->end() && max > 0; ++it) {
+			if(*it == t) {
+				max--;
+				erase(it);
+			}
+		}
+	}
+
+	bool contains(const T& t)
+	{
+		for(const auto& x : *this) {
+			if(x == t)
+				return true;
+		}
+		return false;
+	}
+
+	void concat(const Array<T>& other)
+	{
+		for(const auto& x : other) {
+			this->push_back(x);
+		}
+	}
+
+	Array<T>& operator+=(const Array<T>& o)
+	{
+		concat(o);
+		return *this;
+	}
 };
