@@ -28,13 +28,14 @@ GNU General Public License for more details.
 #include "crtlib.h"
 #include "platformspec.h"
 #include "xprof.h"
-#include "containers/tlist.h"
+#include "logger.h"
 
 #include <stdlib.h>
 #include <memory.h>
 
 /* Allocator global */
 CZoneAllocator* g_pZoneAllocator = NULL;
+LogChannel gMemLogger;
 
 #define MEMHEADER_SENTINEL1 0xDEADF00D
 #define MEMHEADER_SENTINEL2 0xDF
@@ -217,6 +218,8 @@ byte* CZoneAllocator::_Mem_AllocPool(const char* name, const char* filename, int
 		platform::FatalError("Mem_AllocPool: out of memory (allocpool at %s:%i)\n", filename, fileline);
 	memset(pool, 0, sizeof(mempool_t));
 
+	Log::DevMsg(gMemLogger, "Mem_AllocPool: Created pool %s (allocpool at %s:%i)\n", name, filename, fileline);
+
 	// fill header
 	pool->sentinel1 = MEMHEADER_SENTINEL1;
 	pool->sentinel2 = MEMHEADER_SENTINEL1;
@@ -373,8 +376,8 @@ void CZoneAllocator::Mem_PrintStats(void)
 		realsize += pool->realsize;
 	}
 
-	printf("^3%lu^7 memory pools, totalling: ^1%s\n", count, Q_memprint(size));
-	printf("total allocated size: ^1%s\n", Q_memprint(realsize));
+	Log::Msg(gMemLogger, "^3%lu^7 memory pools, totalling: ^1%s\n", count, Q_memprint(size));
+	Log::Msg(gMemLogger, "total allocated size: ^1%s\n", Q_memprint(realsize));
 }
 
 void CZoneAllocator::Mem_PrintList(size_t minallocationsize)
@@ -384,7 +387,7 @@ void CZoneAllocator::Mem_PrintList(size_t minallocationsize)
 
 	_Mem_Check(__FILE__, __LINE__);
 
-	printf("memory pool list:\n"
+	Log::Msg(gMemLogger, "memory pool list:\n"
 	       "  ^3size                          name\n");
 	for (pool = poolchain; pool; pool = pool->next)
 	{
@@ -395,18 +398,18 @@ void CZoneAllocator::Mem_PrintList(size_t minallocationsize)
 		{
 			char sign = (changed_size < 0) ? '-' : '+';
 
-			printf("%10s (%10s actual) %s (^7%c%s change)\n", Q_memprint(pool->totalsize), Q_memprint(pool->realsize), pool->name, sign,
+			Log::Msg(gMemLogger, "%10s (%10s actual) %s (^7%c%s change)\n", Q_memprint(pool->totalsize), Q_memprint(pool->realsize), pool->name, sign,
 			       Q_memprint(abs(changed_size)));
 		}
 		else
 		{
-			printf("%5s (%5s actual) %s\n", Q_memprint(pool->totalsize), Q_memprint(pool->realsize), pool->name);
+			Log::Msg(gMemLogger, "%5s (%5s actual) %s\n", Q_memprint(pool->totalsize), Q_memprint(pool->realsize), pool->name);
 		}
 
 		pool->lastchecksize = pool->totalsize;
 		for (mem = pool->chain; mem; mem = mem->next)
 			if (mem->size >= minallocationsize)
-				printf("%10s allocated at %s:%i\n", Q_memprint(mem->size), mem->filename, mem->fileline);
+				Log::Msg(gMemLogger, "%10s allocated at %s:%i\n", Q_memprint(mem->size), mem->filename, mem->fileline);
 	}
 }
 
@@ -417,6 +420,12 @@ void CZoneAllocator::Memory_Init(void)
 		return;
 	bInit	  = true;
 	poolchain = NULL;
+	gMemLogger = Log::CreateChannel("MemCrtOverride", {255, 150, 150});
+#ifdef USE_CUSTOM_ALLOCATOR
+	Log::Msg(gMemLogger, "USE_CUSTOM_ALLOCATOR IS set, using custom zone allocator.\n");
+#else
+	Log::Msg(gMemLogger, "USE_CUSTOM_ALLOCATOR is NOT set, not using custom allocators.\n");
+#endif
 }
 
 CZoneAllocator::CZoneAllocator() { this->Memory_Init(); }
