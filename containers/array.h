@@ -35,6 +35,11 @@ public:
 		}
 	}
 
+	Array() :
+		std::vector<T>()
+	{
+	}
+
 	void remove(const T& t, size_t max = 1)
 	{
 		for(auto it = this->begin(); it != this->end() && max > 0; ++it) {

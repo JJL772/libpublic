@@ -30,6 +30,12 @@ public:
 
 	}
 
+	List() :
+ 		std::list<T,A>()
+	{
+
+	}
+
 	List(const T* p, size_t n)
 	{
 		for(size_t i = 0; i < n; i++) {
