@@ -30,12 +30,6 @@ GNU General Public License for more details.
 #define COLOR_BOLD   "^7"
 #define COLOR_STRIKE "^8"
 
-namespace logger
-{
-EXPORT void Printf(const char* fmt, ...);
-EXPORT void Errorf(const char* fmt, ...);
-EXPORT void Warnf(const char* fmt, ...);
-} // namespace logger
 
 struct LogColor
 {
@@ -110,6 +104,11 @@ void Msg(LogChannel chan, const char* fmt, ...);
 void Msg(LogChannel chan, LogColor color, const char* fmt, ...);
 void Warn(LogChannel chan, const char* fmt, ...);
 void Warn(LogChannel chan, LogColor color, const char* fmt, ...);
+void DevMsg(LogChannel chan, const char* fmt, ...);
+void DevMsg(LogChannel chan, LogColor color, const char* fmt, ...);
+void DevWarn(LogChannel chan, const char* fmt, ...);
+void DevWarn(LogChannel chan, LogColor color, const char* fmt, ...);
+
 
 /* Log channel groups */
 LogGroup CreateGroup(const char* name);

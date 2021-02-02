@@ -17,12 +17,6 @@ GNU General Public License for more details.
 #include "containers/buffer.h"
 #include "crtlib.h"
 
-void logger::Printf(const char* fmt, ...) {}
-
-void logger::Errorf(const char* fmt, ...) {}
-
-void logger::Warnf(const char* fmt, ...) {}
-
 struct LogGroupDesc_t
 {
 	String name;
@@ -389,6 +383,70 @@ void Log::Warn(LogChannel chan, const char* fmt, ...)
 }
 
 void Log::Warn(LogChannel chan, LogColor color, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	LogInternal(chan, nullptr, ELogLevel::MSG_WARN, color, buf);
+}
+
+void Log::DevMsg(LogChannel chan, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	auto desc = GetChanDesc(chan);
+	if(desc)
+		LogInternal(chan, nullptr, ELogLevel::MSG_GENERAL, desc->defaultColor, buf);
+}
+
+void Log::DevMsg(LogChannel chan, LogColor color, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	LogInternal(chan, nullptr, ELogLevel::MSG_GENERAL, color, buf);
+}
+
+void Log::DevWarn(LogChannel chan, const char* fmt, ...)
+{
+	if (!CheckChannelId(chan) || !fmt)
+		return;
+
+	thread_local static char buf[4096];
+	va_list			 list;
+	va_start(list, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, list);
+	va_end(list);
+
+	auto lock = GlobalLogMutex()->RAIILock();
+	auto desc = GetChanDesc(chan);
+	if(desc)
+		LogInternal(chan, nullptr, ELogLevel::MSG_WARN, desc->defaultColor, buf);
+}
+
+void Log::DevWarn(LogChannel chan, LogColor color, const char* fmt, ...)
 {
 	if (!CheckChannelId(chan) || !fmt)
 		return;
