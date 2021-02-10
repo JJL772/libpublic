@@ -28,11 +28,12 @@ GNU General Public License for more details.
 #include "crtlib.h"
 #include "mem.h"
 
-#ifdef _POSIX
+#ifdef OS_POSIX
 #include <unistd.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 #endif
 
 #ifdef _WIN32
@@ -57,10 +58,6 @@ GNU General Public License for more details.
 #define BIT7 (128)
 
 byte* g_pCrtPool;
-
-#ifndef _WIN32
-#define MAX_PATH PATH_MAX
-#endif
 
 #ifdef _WIN32
 #define PATH_SEPARATORC '\\'
@@ -614,7 +611,7 @@ void Q_atov(float* vec, const char* str, size_t siz)
 {
 	string buffer;
 	char * pstr, *pfront;
-	int    j;
+	size_t    j;
 
 	Q_strncpy(buffer, str, sizeof(buffer));
 	memset(vec, 0, sizeof(vec_t) * siz);
@@ -1436,25 +1433,23 @@ char* Q_FileName(const char* s, char* out, size_t len)
 	return out;
 }
 
-char* Q_BaseDirectory(const char* s, char* out, size_t len)
+char* Q_BaseDirectory(const char* path, char* dest, size_t len)
 {
-	if (!s || !out || len == 0)
-		return nullptr;
-	size_t _len = Q_strlen(s);
-	size_t i;
-	for (i = len - 1; i >= 0; i--)
+	const char* src = path + strlen(path) - 1;
+
+	// back up until a \ or the start
+	while (src != path && !(*(src - 1) == '\\' || *(src - 1) == '/'))
+		src--;
+
+	if (src != path)
 	{
-		if (s[i] == '/' || s[i] == '\\')
-			break;
+		size_t max = src - path;
+		memcpy(dest, path, max > len ? len : max);
+		dest[src - path - 1] = 0; // cutoff backslash
 	}
-	if (i >= len)
-		return nullptr;
-	memcpy(out, s, i + 1);
-	if (_len == len)
-		out[i] = 0;
 	else
-		out[i + 1] = 0;
-	return out;
+		strncpy(dest, "", len);
+	return dest;
 }
 
 char* Q_StripExtension(const char* s, char* out, size_t len)
@@ -1494,7 +1489,7 @@ char* Q_FixSlashes(const char* s, char* out, size_t len)
 		out[_len] = 0;
 	else
 		out[_len - 1] = 0;
-	for (int i = 0; i < _len; i++)
+	for (size_t i = 0; i < _len; i++)
 	{
 		if (out[i] == '\\' || out[i] == '/')
 			out[i] = PATH_SEPARATORC;
@@ -1507,7 +1502,7 @@ char* Q_FixSlashesInPlace(char* s)
 	if (!s)
 		return nullptr;
 	size_t len = Q_strlen(s);
-	for (int i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 	{
 		if (s[i] == '\\' || s[i] == '/')
 			s[i] = PATH_SEPARATORC;
@@ -1519,7 +1514,7 @@ String& Q_FixSlashesInPlace(String& s)
 {
 	char*  _s  = (char*)s;
 	size_t len = Q_strlen(_s);
-	for (int i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 	{
 		if (_s[i] == '\\' || _s[i] == '/')
 			_s[i] = PATH_SEPARATORC;
@@ -1591,4 +1586,15 @@ int Q_fileno(FILE* f)
 #else
 	return fileno(f);
 #endif
+}
+
+char* Q_BuildLibraryName(const char* basename, char* buffer, size_t bufsize)
+{
+	Q_snprintf(buffer, bufsize, "%s%s%s", DLL_PREFIX, basename, DLL_EXT);
+	return buffer;
+}
+
+int  Q_chdir(const char* path)
+{
+	return chdir(path);
 }

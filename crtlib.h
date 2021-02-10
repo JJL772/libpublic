@@ -38,6 +38,41 @@ GNU General Public License for more details.
 #define PATH_SEPARATOR "/"
 #endif
 
+#ifdef _WIN32
+#	undef LIB_PREFIX
+#	undef DLL_PREFIX
+#	undef LIB_EXT
+#	undef EXE_EXT
+#	undef DLL_EXT
+#	define LIB_PREFIX ""
+#	define DLL_PREFIX ""
+#	define LIB_EXT ".lib"
+#	define EXE_EXT ".exe"
+#	define DLL_EXT ".dll"
+#elif defined(__linux__)
+#	undef LIB_PREFIX
+#	undef DLL_PREFIX
+#	undef LIB_EXT
+#	undef EXE_EXT
+#	undef DLL_EXT
+#	define LIB_PREFIX "lib"
+#	define DLL_PREFIX "lib"
+#	define LIB_EXT ".a"
+#	define EXE_EXT ""
+#	define DLL_EXT ".so"
+#elif defined(__apple__)
+#	undef LIB_PREFIX
+#	undef DLL_PREFIX
+#	undef LIB_EXT
+#	undef EXE_EXT
+#	undef DLL_EXT
+#	define LIB_PREFIX "lib"
+#	define DLL_PREFIX "lib"
+#	define LIB_EXT ".a"
+#	define EXE_EXT ""
+#	define DLL_EXT ".dylib"
+#endif
+
 // timestamp modes
 enum
 {
@@ -156,3 +191,7 @@ EXPORT int   Q_mkstemp(char* tmpl);
 EXPORT int   Q_unlink(const char* path);
 EXPORT int   Q_mkdir(const char* path);
 EXPORT int   Q_fileno(FILE* f);
+EXPORT int   Q_chdir(const char* path);
+
+/* Builds a library name from a base */
+EXPORT char* 	Q_BuildLibraryName(const char* basename, char* buffer, size_t bufsize);
