@@ -23,11 +23,6 @@ GNU General Public License for more details.
 #include <string.h>
 #include <stdlib.h>
 
-// DO NOT USE THIS YOU FUCKING RETARD
-#define strdup FUCK YOU BITCH
-#define malloc FUCK YOU BITCH
-#define free   FUCK YOU BITCH
-
 String::String()
 {
 	this->m_length = 0;

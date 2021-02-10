@@ -1324,31 +1324,17 @@ int matchpattern_with_separator(const char* in, const char* pattern, qboolean ca
 
 char* Q_strdup(const char* s)
 {
-	if (!s)
-		return nullptr;
-	InitCrtLib();
-	size_t size = Q_strlen(s);
-	char*  ret  = (char*)GlobalAllocator()._Mem_Alloc(g_pCrtPool, size + 1, false, __FILE__, __LINE__);
-	if (!ret)
-		return ret;
-	memcpy(ret, s, size);
-	ret[size] = 0;
-	return ret;
+	return strdup(s);
 }
 
 void* Q_malloc(size_t sz)
 {
-	if (sz == 0)
-		return nullptr;
-	InitCrtLib();
-	return GlobalAllocator()._Mem_Alloc(g_pCrtPool, sz, false, __FILE__, __LINE__);
+	return malloc(sz);
 }
 
 void Q_free(void* ptr)
 {
-	if (!ptr)
-		return;
-	GlobalAllocator()._Mem_Free(ptr, __FILE__, __LINE__);
+	free(ptr);
 }
 
 bool Q_strint(const char* str, int& out, int base)
