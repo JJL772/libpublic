@@ -1584,3 +1584,12 @@ int  Q_chdir(const char* path)
 {
 	return chdir(path);
 }
+
+char* Q_realpath(const char* path, char* resolved, size_t size_of_resolved)
+{
+#ifdef OS_POSIX
+	return realpath(path, resolved);
+#else
+	return _fullpath(resolved, path, size_of_resolved);
+#endif
+}

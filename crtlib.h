@@ -192,6 +192,7 @@ EXPORT int   Q_unlink(const char* path);
 EXPORT int   Q_mkdir(const char* path);
 EXPORT int   Q_fileno(FILE* f);
 EXPORT int   Q_chdir(const char* path);
+EXPORT char* Q_realpath(const char* path, char* resolved, size_t size_of_resolved);
 
 /* Builds a library name from a base */
 EXPORT char* 	Q_BuildLibraryName(const char* basename, char* buffer, size_t bufsize);
