@@ -179,4 +179,178 @@ GNU General Public License for more details.
 #define XASH_64BIT 1
 #endif
 
+//==========================================================//
+// Feature test macros
+//==========================================================//
+#if ( defined(__AVX__) ) && !( defined(FORBID_SIMD) || defined(FORBID_AVX) )
+#	undef USE_AVX
+#	define USE_AVX 1
+#endif
+#if ( defined(__AVX2__) ) && !( defined(FORBID_SIMD) || defined(FORBID_AVX2) )
+#	undef USE_AVX2
+#	define USE_AVX2 1
+#endif
+#if ( defined(__SSE__) || defined(_M_X64) || (_M_IX86_FP >= 1) ) &&  !( defined(FORBID_SIMD) || defined(FORBID_SSE) )
+#	undef USE_SSE
+#	define USE_SSE 1
+#endif
+#if ( defined(__SSE2__) || defined(_M_X64) || (_M_IX86_FP >= 2) ) &&  !( defined(FORBID_SIMD) || defined(FORBID_SSE2) )
+#	undef USE_SSE2
+#	define USE_SSE2 1
+#endif
+#if ( defined(__SSE3__) || defined(_M_X64) ) &&  !( defined(FORBID_SIMD) || defined(FORBID_SSE3) )
+#	undef USE_SSE3
+#	define USE_SSE3 1
+#endif
+#if ( defined(__SSE4_1__) ) &&  !( defined(FORBID_SIMD) || defined(FORBID_SSE41) )
+#	undef USE_SSE41
+#	define USE_SSE41 1
+#endif
+#if ( defined(__SSE4_2__) ) &&  !( defined(FORBID_SIMD) || defined(FORBID_SSE42) )
+#	undef USE_SSE42
+#	define USE_SSE42 1
+#endif
+#if ( defined(__SSSE3__) ) &&  !( defined(FORBID_SIMD) || defined(FORBID_SSSE3) )
+#	undef USE_SSSE3
+#	define USE_SSSE3 1
+#endif
+#if ( defined(__ARM_NEON) ) && !( defined(FORBID_SIMD) || defined(FORBID_NEON) )
+#	undef USE_NEON
+#	define USE_NEON 1
+#endif
+#if ( defined(__ARM_FEATURE_SVE) ) && !( defined(FORBID_SIMD) || defined(FORBID_SVE) )
+#	undef USE_SVE
+#	define USE_SVE 1
+#endif
+#if ( defined(__ARM_FEATURE_SVE2) ) && !( defined(FORBID_SIMD) || defined(FORBID_SVE2) )
+#	undef USE_SVE2
+#	define USE_SVE2 1
+#endif
+#if ( defined(__ARM_FEATURE_CRC32) )
+#	undef HAS_ARM_CRC32
+#	define HAS_ARM_CRC32 1
+#endif
+#if ( defined(__ARM_FEATURE_FMA) )
+#	undef HAS_ARM_FMA
+#	define HAS_ARM_FMA 1
+#endif
+#if ( defined(__ARM_FEATURE_COMPLEX) )
+#	undef HAS_ARM_COMPLEX
+#	define HAS_ARM_COMPLEX 1
+#endif
+#if ( defined(__ARM_FEATURE_SVE) )
+#	undef HAS_ARM_SVE
+#	define HAS_ARM_SVE 1
+#endif
+#if ( defined(__ARM_FEATURE_SVE2) )
+#	undef HAS_ARM_SVE2
+#	define HAS_ARM_SVE2 1
+#endif
+#if ( defined(__amd64__) || defined(_M_X64_) )
+#	undef PLATFORM_64BITS
+#	undef _X64_
+#	undef PLATFORM_AMD64
+#	define PLATFORM_64BITS 1
+#	define _X64_
+#	define PLATFORM_AMD64 1
+#endif
+#if ( defined(__i386__) || defined(_M_IX86_) )
+#	undef PLATFORM_32BITS
+#	undef PLATFORM_X86
+#	undef _X86_
+#	define PLATFORM_32BITS 1
+#	define PLATFORM_X86 1
+#	define _X86_ 1
+#endif
+#if ( defined(_M_ARM) || defined(__arm__) )
+#	undef PLATFORM_32BITS
+#	undef PLATFORM_ARM
+#	undef PLATFORM_ARM32
+#	define PLATFORM_32BITS 1
+#	define PLATFORM_ARM 1
+#	define PLATFORM_ARM32 1
+#endif
+#if ( defined(_M_ARM64) || defined(__aarch64__) )
+#	undef PLATFORM_64BITS
+#	undef PLATFORM_ARM
+#	undef PLATFORM_ARM64
+#	define PLATFORM_64BITS 1
+#	define PLATFORM_ARM 1
+#	define PLATFORM_ARM64 1
+#endif
+#if ( defined(__ppc64__) )
+#	undef PLATFORM_64BITS
+#	undef PLATFORM_PPC
+#	undef PLATFORM_PPC64
+#	define PLATFORM_64BITS 1
+#	define PLATFORM_PPC 1
+#	define PLATFORM_PPC64 1
+#elif ( defined(__ppc__) )
+#	undef PLATFORM_32BITS
+#	undef PLATFORM_PPC
+#	undef PLATFORM_PPC32
+#	define PLATFORM_32BITS 1
+#	define PLATFORM_PPC 1
+#	define PLATFORM_PPC32 1
+#endif
+#if ( defined(__riscv) )
+#	undef PLATFORM_64BITS
+#	undef PLATFORM_RISCV
+#	undef PLATFORM_RISCV64
+#	define PLATFORM_64BITS 1
+#	define PLATFORM_RISCV 1
+#	define PLATFORM_RISCV64 1
+#endif
+#if ( defined(__GNUC__) )
+#	undef COMPILER_GCC
+#	define COMPILER_GCC 1
+#endif
+#if ( defined(_MSC_VER) )
+#	undef COMPILER_MSVC
+#	define COMPILER_MSVC 1
+#endif
+#if ( defined(__clang__) )
+#	undef COMPILER_CLANG
+#	define COMPILER_CLANG 1
+#endif
+#if ( defined(__linux__) )
+#	undef OS_LINUX
+#	undef OS_POSIX
+#	define OS_POSIX 1
+#	define OS_LINUX 1
+#endif
+#if ( defined(_WIN32) )
+#	undef OS_WINDOWS
+#	define OS_WINDOWS 1
+#endif
+#if ( defined(__APPLE__) )
+#	undef OS_OSX
+#	undef OS_POSIX
+#	define OS_POSIX 1
+#	define OS_OSX 1
+#endif
+#if ( defined(__ANDROID__) )
+#	undef OS_ANDROID
+#	undef OS_POSIX
+#	define OS_POSIX 1
+#	define OS_ANDROID
+#endif
+#if ( __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ )
+#	undef PLATFORM_BIG_ENDIAN
+#	define PLATFORM_BIG_ENDIAN 1
+#else
+#	undef PLATFORM_LITTLE_ENDIAN
+#	define PLATFORM_LITTLE_ENDIAN 1
+#endif
+
+#ifdef OS_POSIX
+#undef _POSIX
+#define _POSIX 1
+#endif
+
+#ifdef OS_LINUX
+#undef _LINUX
+#define _LINUX 1
+#endif
+
 #endif // BUILD_H
